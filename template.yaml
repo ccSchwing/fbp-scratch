@@ -30,3 +30,7 @@ Resources:
           Properties:
             Path: /createOrder
             Method: POST
+#  Replace CreateOrder with something like AddFBPUser
+#  Remember to add the appropriate IAM permissions
+#  
+#  Define your dynamo DB access here as another lambda function
