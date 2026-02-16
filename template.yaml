@@ -8,9 +8,9 @@ Globals:
   Function:
     Timeout: 20
     MemorySize: 512
-    Environment:
-      Variables:
-        FBP_USERS_TABLE_NAME: !Ref FBPUsersTableName  # Fixed: Added ! and corrected parameter name
+    # Environment:
+    #   Variables:
+    #     FBP_USERS_TABLE_NAME: !Ref FBPUsersTableName  # Fixed: Added ! and corrected parameter name
   Api:
     Cors:
       AllowMethods: "'GET,POST,OPTIONS'"
@@ -23,31 +23,17 @@ Parameters:
     Default: FBPUsers
 
 Resources:
-  Resources:
-  FBPWebsiteBucket:
-    Type: AWS::S3::Bucket
+  FBPUsersTable:
+    Type: AWS::DynamoDB::Table
     Properties:
-      BucketName: my-fbp.com  # Or whatever bucket name you're using
-      WebsiteConfiguration:
-        IndexDocument: signup.html
-        ErrorDocument: error.html
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: false
-        BlockPublicPolicy: false
-        IgnorePublicAcls: false
-        RestrictPublicBuckets: false
-
-  FBPWebsiteBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref FBPWebsiteBucket
-      PolicyDocument:
-        Statement:
-          - Sid: PublicReadGetObject
-            Effect: Allow
-            Principal: '*'
-            Action: 's3:GetObject'
-            Resource: !Sub '${FBPWebsiteBucket}/*'
+      TableName: !Ref FBPUsersTableName
+      AttributeDefinitions:
+        - AttributeName: email
+          AttributeType: S
+      KeySchema:
+        - AttributeName: email
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
 
   AddFBPUser:
     Type: AWS::Serverless::Function
@@ -61,7 +47,10 @@ Resources:
       # Remove Environment here since it's in Globals
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref FBPUsersTableName  # Use parameter reference
+            TableName: !Ref FBPUsersTableName
+      Environment:
+        Variables:
+          FBPUsers: !Ref FBPUsersTableName
       Events:
         AddFBPUser:
           Type: Api
