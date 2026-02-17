@@ -1,6 +1,6 @@
 package com.fbp;
 
-public class FBPUser {
+public class FBPUserorig {
     public String fbpUser;
 
     public String firstName;
@@ -8,11 +8,12 @@ public class FBPUser {
     public String email;
     public String displayName;
 
-    public FBPUser() {
-
+    public FBPUserorig() {
+        super();
     }
 
-public FBPUser(String firstName, String lastName, String email, String displayName) {
+
+public FBPUserorig(String firstName, String lastName, String email, String displayName) {
     this.firstName = firstName;
     this.lastName = lastName;
     this.email = email;

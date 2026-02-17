@@ -9,4 +9,13 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["AddFBPUser"]
 
+[function_build_definitions.1b374438-8e3c-45e2-ad03-328fd787affa]
+codeuri = "/Users/ccs/projects/fbp-lambda/GetFBPUsers"
+runtime = "java11"
+architecture = "x86_64"
+handler = "com.fbp.GetFBPUsers::getFBPUser"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["GetFBPUser"]
+
 [layer_build_definitions]

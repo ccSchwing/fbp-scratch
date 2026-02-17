@@ -6,8 +6,10 @@
     <version>1.0</version>
     <packaging>jar</packaging>
     <name>GetFBPUsers</name> 
-    <properties>
-        <maven.compiler.release>21</maven.compiler.release>
+       <properties>
+        <maven.compiler.target>11</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.release>11</maven.compiler.release>
         <aws.java.sdk.version>2.41.13</aws.java.sdk.version>
     </properties>
 
@@ -17,6 +19,11 @@
     <groupId>software.amazon.awssdk</groupId>
     <artifactId>aws-core</artifactId>
 </dependency>
+    <dependency>
+    <groupId>com.fbp</groupId>
+      <artifactId>fbpUtils</artifactId>
+      <version>1.0</version>
+    </dependency>
       <dependency>
         <groupId>software.amazon.awssdk</groupId>
         <artifactId>archetype-lambda</artifactId>
@@ -89,6 +96,11 @@
           <artifactId>maven-shade-plugin</artifactId>
           <version>3.2.4</version>
           <configuration>
+            <fork>true</fork>
+            <compilerArgs>
+              <arg>--add-opens=java.base/java.lang=ALL-UNNAMED</arg>
+              <arg>--add-opens=java.base/sun.nio.ch=ALL-UNNAMED</arg>
+            </compilerArgs>
           </configuration>
           <executions>
             <execution>

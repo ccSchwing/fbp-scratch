@@ -13,12 +13,13 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 
 
+
 public class AddFBPUser {
     public APIGatewayProxyResponseEvent createFBPUser(APIGatewayProxyRequestEvent request)
         throws JsonMappingException, JsonProcessingException {
         try{ 
         ObjectMapper objectMapper = new ObjectMapper();
-        FBPUser fbpUser = objectMapper.readValue(request.getBody(), FBPUser.class);
+        Utils.FBPUser fbpUser = objectMapper.readValue(request.getBody(), FBPUser.class);
         DynamoDbClient dynamoDB = DynamoDbClient.builder().build();
 
         String tableName = System.getenv("FBPUsers");

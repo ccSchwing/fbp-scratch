@@ -11,7 +11,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
 import software.amazon.awssdk.services.dynamodb.model.ScanResponse;
-
 public class GetFBPUser {
     public APIGatewayProxyResponseEvent getFBPUser(APIGatewayProxyRequestEvent request)
             throws JsonMappingException, Exception {

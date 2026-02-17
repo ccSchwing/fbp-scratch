@@ -55,6 +55,29 @@ Resources:
           Properties:
             Path: /addFBPUser
             Method: POST
+
+  GetFBPUser:
+      Type: AWS::Serverless::Function
+      Properties:
+        CodeUri: ./GetFBPUsers
+        Handler: com.fbp.GetFBPUsers::getFBPUser
+        Runtime: java11
+        Architectures:
+          - x86_64
+      # Remove MemorySize here since it's in Globals
+      # Remove Environment here since it's in Globals
+        Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPUsersTableName
+        Environment:
+          Variables:
+            FBPUsers: !Ref FBPUsersTableName
+        Events:
+          GetFBPUser:
+            Type: Api
+            Properties:
+              Path: /getFBPUser
+              Method: GET
 Outputs:
   FBPUsersTable:
     Description: "FBP Users Table"
@@ -69,4 +92,13 @@ Outputs:
   AddFPBUserFunctionRole:
     Description: "Add FBP User Lambda Function Role"
     Value: !GetAtt AddFBPUserRole.Arn
+  GetFBPUserFunction:
+    Description: "Get FBP User Lambda Function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getFBPUser"
+  GetFPBUserFunctionARN:
+    Description: "Get FBP User Lambda Function ARN"
+    Value: !GetAtt GetFBPUser.Arn
+  GetFPBUserFunctionRole:
+    Description: "Get FBP User Lambda Function Role"
+    Value: !GetAtt GetFBPUserRole.Arn
 
