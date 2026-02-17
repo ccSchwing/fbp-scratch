@@ -18,7 +18,7 @@ public class AddFBPUser {
         throws JsonMappingException, JsonProcessingException {
         try{ 
         ObjectMapper objectMapper = new ObjectMapper();
-        FBPUser fbpUser = objectMapper.readValue(request.getBody(), FBPUser.class);
+        SingleFBPUser fbpUser = objectMapper.readValue(request.getBody(), SingleFBPUser.class);
         DynamoDbClient dynamoDB = DynamoDbClient.builder().build();
 
         String tableName = System.getenv("FBPUsers");

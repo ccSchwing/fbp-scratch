@@ -57,3 +57,18 @@ Resources:
           Properties:
             Path: /addFBPUser
             Method: POST
+Outputs:
+  FBPUsersTable:
+    Description: "FBP Users Table"
+    Value: !Ref FBPUsersTable
+
+  AddFBPUserFunction:
+    Description: "Add FBP User Lambda Function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/addFBPUser"
+  AddFPBUserFunctionARN:
+    Description: "Add FBP User Lambda Function ARN"
+    Value: !GetAtt AddFBPUser.Arn
+  AddFPBUserFunctionRole:
+    Description: "Add FBP User Lambda Function Role"
+    Value: !GetAtt AddFBPUserRole.Arn
+

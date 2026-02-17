@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo '{
-  "body": "{\"email\":\"test@example.com\",\"firstName\":\"Test\",\"lastName\":\"User\",\"displayName\":\"Test User\"}"
+  "body": "{\"email\":\"test@example.com\",\"firstName\":\"TestUser\",\"lastName\":\"User\",\"displayName\":\"Test User\"}"
 }' > test-payload.json
 
 aws lambda invoke \

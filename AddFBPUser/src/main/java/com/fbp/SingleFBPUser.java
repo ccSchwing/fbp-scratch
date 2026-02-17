@@ -1,12 +1,12 @@
 package com.fbp;
 
-public class FBPUser {
-    public String firstName;
-    public String lastName;
-    public String email;
-    public String displayName;
+public class SingleFBPUser {
+    public String fbpUser;
 
-    public FBPUser() {
+
+    public SingleFBPUser() {
+    }
+    public SingleFBPUser() {
 
     }
 
