@@ -19,7 +19,7 @@ public class AddFBPUser {
         throws JsonMappingException, JsonProcessingException {
         try{ 
         ObjectMapper objectMapper = new ObjectMapper();
-        Utils.FBPUser fbpUser = objectMapper.readValue(request.getBody(), FBPUser.class);
+        FBPUser fbpUser = objectMapper.readValue(request.getBody(), FBPUser.class);
         DynamoDbClient dynamoDB = DynamoDbClient.builder().build();
 
         String tableName = System.getenv("FBPUsers");
@@ -27,16 +27,17 @@ public class AddFBPUser {
             PutItemRequest.builder()
                 .tableName(tableName)
                 .item(java.util.Map.of(
-                    "firstName", AttributeValue.builder().s(fbpUser.firstName).build(),
-                    "lastName", AttributeValue.builder().s(fbpUser.lastName).build(),
-                    "email", AttributeValue.builder().s(fbpUser.email).build(),
-                    "displayName", AttributeValue.builder().s(fbpUser.displayName).build()
+                    "firstName", AttributeValue.builder().s(fbpUser.getFirstName()).build(),
+                    "lastName", AttributeValue.builder().s(fbpUser.getLastName()).build(),
+                    "email", AttributeValue.builder().s(fbpUser.getEmail()).build(),
+                    "displayName", AttributeValue.builder().s(fbpUser.getDisplayName()).build()
                 ))
                 .build();
         dynamoDB.putItem(putItemRequest);
-        System.out.println("User created: " + fbpUser.displayName);
+        System.out.println("User created: " + fbpUser.getDisplayName());
         System.out.println("Table Name from ENV: " + tableName);
-        String responseMessage = String.format("FBP User created: FirstName=%s, LastName=%s, Email=%s, DisplayName=%s", fbpUser.firstName, fbpUser.lastName, fbpUser.email, fbpUser.displayName);
+        String responseMessage = String.format("FBP User created: FirstName=%s, LastName=%s, Email=%s, DisplayName=%s",
+                    fbpUser.getFirstName(), fbpUser.getLastName(), fbpUser.getEmail(), fbpUser.getDisplayName());
         return new APIGatewayProxyResponseEvent().withStatusCode(200)
             .withHeaders(Map.of(
                 "Access-Control-Allow-Origin", "*",

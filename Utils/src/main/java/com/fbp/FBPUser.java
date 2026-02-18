@@ -2,10 +2,10 @@ package com.fbp;
 
 public class FBPUser {
     
-        private String email;
-        private String firstName;
-        private String lastName;
-        private String displayName;
+        public String email;
+        public String firstName;
+        public String lastName;
+        public String displayName;
 
 
 
