@@ -21,6 +21,9 @@ Parameters:
   FBPScheduleTableName:  # Added parameter for schedule table
     Type: String
     Default: 2025-Schedule
+  FBPSpreadTableName:  # Added parameter for spread table
+    Type: String
+    Default: 2025-Spread
 
 Resources:
   AddFBPUser:
@@ -81,43 +84,75 @@ Resources:
       # Remove Environment here since it's in Globals
         Policies:
         - DynamoDBReadPolicy:
+            TableName: !Ref FBPSpreadTableName
+        Environment:
+          Variables:
+            FBPSpreadTableName: !Ref FBPSpreadTableName
+        Events:
+          GetPickSheet:
+            Type: Api
+            Properties:
+              Path: /getPickSheet
+              Method: GET  
+  GetScheduleSheet: 
+      Type: AWS::Serverless::Function
+      Properties:
+        CodeUri: ./GetScheduleSheet
+        Handler: com.fbp.GetScheduleSheet::getScheduleSheet
+        Runtime: java11
+        Architectures:
+          - x86_64
+      # Remove MemorySize here since it's in Globals
+      # Remove Environment here since it's in Globals
+        Policies:
+        - DynamoDBReadPolicy:
             TableName: !Ref FBPScheduleTableName
         Environment:
           Variables:
             FBPScheduleTableName: !Ref FBPScheduleTableName
         Events:
-          GetFBPUser:
+          GetScheduleSheet:
             Type: Api
             Properties:
-              Path: /getPicksForWeek
+              Path: /getScheduleSheet
               Method: GET  
+
 Outputs:
-  AddFBPUserFunction:
-    Description: "Add FBP User Lambda Function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/addFBPUser"
-  AddFPBUserFunctionARN:
-    Description: "Add FBP User Lambda Function ARN"
+  addfbpuserfunction:
+    Description: "add fbp user lambda function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/addfbpuser"
+  addfpbuserfunctionarn:
+    Description: "add fbp user lambda function arn"
     Value: !GetAtt AddFBPUser.Arn
-  AddFPBUserFunctionRole:
-    Description: "Add FBP User Lambda Function Role"
+  addfpbuserfunctionrole:
+    Description: "add fbp user lambda function role"
     Value: !GetAtt AddFBPUserRole.Arn
-  GetFBPUserFunction:
-    Description: "Get FBP User Lambda Function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getFBPUser"
-  GetFPBUserFunctionARN:
-    Description: "Get FBP User Lambda Function ARN"
+  getfbpuserfunction:
+    Description: "get fbp user lambda function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/getfbpuser"
+  getfpbuserfunctionarn:
+    Description: "get fbp user lambda function arn"
     Value: !GetAtt GetFBPUser.Arn
-  GetFPBUserFunctionRole:
-    Description: "Get FBP User Lambda Function Role"
+  getfpbuserfunctionrole:
+    Description: "get fbp user lambda function role"
     Value: !GetAtt GetFBPUserRole.Arn
-  GetPickSheetFunction:
-    Description: "Get Pick Sheet Lambda Function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getPicksForWeek"
-  GetPickSheetFunctionARN:
-    Description: "Get Pick Sheet Lambda Function ARN"
+  getschedulesheetfunction:
+    Description: "get schedule sheet lambda function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/getScheduleSheet"
+  getschedulesheetfunctionarn:
+    Description: "get schedule sheet lambda function arn"
+    Value: !GetAtt GetScheduleSheet.Arn
+  getschedulesheetfunctionrole:
+    Description: "get schedule sheet lambda function role"
+    Value: !GetAtt GetScheduleSheetRole.Arn
+  getpicksheetfunction:
+    Description: "get pick sheet lambda function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/getPickSheet"
+  getpicksheetfunctionarn:
+    Description: "get pick sheet lambda function arn"
     Value: !GetAtt GetPickSheet.Arn
-  GetPickSheetFunctionRole:
-    Description: "Get Pick Sheet Lambda Function Role"
+  getpicksheetfunctionrole:
+    Description: "get pick sheet lambda function role"
     Value: !GetAtt GetPickSheetRole.Arn
 
 

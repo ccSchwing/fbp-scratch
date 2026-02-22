@@ -27,4 +27,13 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["GetPickSheet"]
 
+[function_build_definitions.028ddd40-76f1-4e46-80dd-b2a977f1786a]
+codeuri = "/Users/ccs/projects/fbp-lambda/GetScheduleSheet"
+runtime = "java11"
+architecture = "x86_64"
+handler = "com.fbp.GetScheduleSheet::getScheduleSheet"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["GetScheduleSheet"]
+
 [layer_build_definitions]

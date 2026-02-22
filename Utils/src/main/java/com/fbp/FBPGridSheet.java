@@ -7,13 +7,14 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 
 @DynamoDbBean
-public class FBPPickSheet {
+public class FBPGridSheet {
     private String week;
     private String gameId;
     private String awayTeam;
     private String homeTeam;
     private String date;
     private String spread;
+    private String finalWithSpread;
 
     @DynamoDbPartitionKey
     @DynamoDbAttribute("Week")
@@ -36,6 +37,10 @@ public class FBPPickSheet {
     @DynamoDbAttribute("Date")
     public String getDate() { return date; }
     public void setDate(String date) { this.date = date; }
+
+    @DynamoDbAttribute("FinalWithSpread")
+    public String getFinalWithSpread() { return finalWithSpread; }
+    public void setFinalWithSpread(String finalWithSpread) { this.finalWithSpread = finalWithSpread; }
 
     @DynamoDbAttribute("Spread")
     public String getSpread() { return spread; }

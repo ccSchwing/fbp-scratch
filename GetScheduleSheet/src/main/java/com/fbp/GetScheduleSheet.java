@@ -11,15 +11,15 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 
-public class GetPickSheet {
-    public APIGatewayProxyResponseEvent getPickSheet(APIGatewayProxyRequestEvent request) throws JsonProcessingException {
+public class GetScheduleSheet {
+    public APIGatewayProxyResponseEvent getScheduleSheet(APIGatewayProxyRequestEvent request) throws JsonProcessingException {
         String week = null;
         if (request != null && request.getQueryStringParameters() != null) {
             week = request.getQueryStringParameters().get("Week");
@@ -55,7 +55,7 @@ public class GetPickSheet {
             .build();
 
         DynamoDbTable<FBPPickSheet> table =
-            enhancedClient.table(System.getenv("FBPSpreadTableName"), TableSchema.fromClass(FBPPickSheet.class));
+            enhancedClient.table(System.getenv("FBPScheduleTableName"), TableSchema.fromClass(FBPPickSheet.class));
         try {
             List<FBPPickSheet> pickSheets = table.query(QueryConditional.keyEqualTo(Key.builder().partitionValue(week).build()))
                 .items()
