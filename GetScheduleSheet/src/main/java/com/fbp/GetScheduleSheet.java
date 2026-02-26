@@ -11,12 +11,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-
 
 public class GetScheduleSheet {
     public APIGatewayProxyResponseEvent getScheduleSheet(APIGatewayProxyRequestEvent request) throws JsonProcessingException {
@@ -54,10 +53,10 @@ public class GetScheduleSheet {
             .dynamoDbClient(dynamoDbClient)
             .build();
 
-        DynamoDbTable<FBPPickSheet> table =
-            enhancedClient.table(System.getenv("FBPScheduleTableName"), TableSchema.fromClass(FBPPickSheet.class));
+        DynamoDbTable<FBPGridSheet> table =
+            enhancedClient.table(System.getenv("FBPScheduleTableName"), TableSchema.fromClass(FBPGridSheet.class));
         try {
-            List<FBPPickSheet> pickSheets = table.query(QueryConditional.keyEqualTo(Key.builder().partitionValue(week).build()))
+            List<FBPGridSheet> pickSheets = table.query(QueryConditional.keyEqualTo(Key.builder().partitionValue(week).build()))
                 .items()
                 .stream()
                 .collect(Collectors.toList());
