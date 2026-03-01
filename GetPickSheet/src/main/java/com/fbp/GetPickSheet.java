@@ -22,25 +22,6 @@ public class GetPickSheet {
     public APIGatewayProxyResponseEvent getPickSheet(APIGatewayProxyRequestEvent request) throws JsonProcessingException {
         String week = getCurrentWeek();
 
-        // if (request != null && request.getQueryStringParameters() != null) {
-        //     week = request.getQueryStringParameters().get("Week");
-        // }
-        // if ((week == null || week.isBlank()) && request != null && request.getBody() != null && !request.getBody().isBlank()) {
-        //     try {
-        //         Map<String, String> body = new ObjectMapper().readValue(request.getBody(), new TypeReference<Map<String, String>>() {
-        //         });
-        //         if (body != null) {
-        //             week = body.get("Week");
-        //         }
-        //     } catch (Exception e) {
-        //         return new APIGatewayProxyResponseEvent()
-        //             .withStatusCode(400)
-        //             .withHeaders(Map.of(
-        //                 "Access-Control-Allow-Origin", "https://my-fbp.com",
-        //                 "Content-Type", "application/json"))
-        //             .withBody(new ObjectMapper().writeValueAsString(Map.of("error", "Failed to parse request body: " + e.getMessage())));
-        //     }
-        // }
         if (week == null || week.isBlank()) {
             return new APIGatewayProxyResponseEvent()
                 .withStatusCode(400)

@@ -14,27 +14,27 @@ import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 
 
 
-public class AddFBPUser {
-    public APIGatewayProxyResponseEvent addFBPUser(APIGatewayProxyRequestEvent request)
+public class SaveFBPPicks {
+    public APIGatewayProxyResponseEvent saveFBPPicks(APIGatewayProxyRequestEvent request)
         throws JsonMappingException, JsonProcessingException {
         try{ 
         ObjectMapper objectMapper = new ObjectMapper();
-        FBPUserBean fbpUser = objectMapper.readValue(request.getBody(), FBPUserBean.class);
+        FBPPicks fbpPicks = objectMapper.readValue(request.getBody(), FBPPicks.class);
         DynamoDbClient dynamoDB = DynamoDbClient.builder().build();
 
-        String tableName = System.getenv("FBPUserTableName");
+        String tableName = System.getenv("FBPPicksTableName");
 
          PutItemRequest putItemRequest =
             PutItemRequest.builder()
                 .tableName(tableName)
                 .item(java.util.Map.of(
-                    "email", AttributeValue.builder().s(fbpUser.getEmail()).build(),
-                    "firstName", AttributeValue.builder().s(fbpUser.getFirstName()).build(),
-                    "lastName", AttributeValue.builder().s(fbpUser.getLastName()).build(),
-                    "displayName", AttributeValue.builder().s(fbpUser.getDisplayName()).build()
+                    "email", AttributeValue.builder().s(fbpPicks.getEmail()).build(),
+                    "picks", AttributeValue.builder().s(fbpPicks.getPicks()).build(),
+                    "tieBreaker", AttributeValue.builder().s(fbpPicks.gettieBreaker()).build()
                 ))
                 .build();
         dynamoDB.putItem(putItemRequest);
+        System.out.println("Picks saved: " + fbpPicks.getPicks());
         System.out.println("Table Name from ENV: " + tableName);
         return new APIGatewayProxyResponseEvent().withStatusCode(200)
             .withHeaders(Map.of(

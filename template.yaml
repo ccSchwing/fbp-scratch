@@ -18,7 +18,7 @@ Globals:
 Parameters:
   FBPUsersTableName:  # Fixed: Corrected spelling (was FBPusersTableName)
     Type: String
-    Default: FBPUsers
+    Default: FBP-Users
   FBPScheduleTableName:  # Added parameter for schedule table
     Type: String
     Default: 2025-Schedule
@@ -28,13 +28,16 @@ Parameters:
   FBPConfigTableName:  # Added parameter for config table
     Type: String
     Default: FBP-Config
+  FBPPicksTableName:  # Added parameter for picks table
+    Type: String
+    Default: FBP-Picks
 
 Resources:
   AddFBPUser:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./AddFBPUser
-      Handler: com.fbp.AddFBPUser::createFBPUser
+      Handler: com.fbp.AddFBPUser::addFBPUser
       Runtime: java11
       Architectures:
         - x86_64
@@ -51,6 +54,28 @@ Resources:
           Type: Api
           Properties:
             Path: /addFBPUser
+            Method: POST
+  SaveFBPPicks:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./SaveFBPPicks
+      Handler: com.fbp.SaveFBPPicks::saveFBPPicks
+      Runtime: java11
+      Architectures:
+        - x86_64
+      # Remove MemorySize here since it's in Globals
+      # Remove Environment here since it's in Globals
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPPicksTableName
+      Environment:
+        Variables:
+          FBPPicksTableName: !Ref FBPPicksTableName
+      Events:
+        SaveFBPPicks:
+          Type: Api
+          Properties:
+            Path: /saveFBPPicks
             Method: POST
 
   GetFBPUser:
@@ -130,7 +155,7 @@ Resources:
 Outputs:
   addfbpuserfunction:
     Description: "add fbp user lambda function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/addfbpuser"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/addfbpuser"
   addfpbuserfunctionarn:
     Description: "add fbp user lambda function arn"
     Value: !GetAtt AddFBPUser.Arn
@@ -139,7 +164,7 @@ Outputs:
     Value: !GetAtt AddFBPUserRole.Arn
   getfbpuserfunction:
     Description: "get fbp user lambda function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/getfbpuser"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getfbpuser"
   getfpbuserfunctionarn:
     Description: "get fbp user lambda function arn"
     Value: !GetAtt GetFBPUser.Arn
@@ -148,7 +173,7 @@ Outputs:
     Value: !GetAtt GetFBPUserRole.Arn
   getschedulesheetfunction:
     Description: "get schedule sheet lambda function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/getScheduleSheet"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getScheduleSheet"
   getschedulesheetfunctionarn:
     Description: "get schedule sheet lambda function arn"
     Value: !GetAtt GetScheduleSheet.Arn
@@ -157,12 +182,20 @@ Outputs:
     Value: !GetAtt GetScheduleSheetRole.Arn
   getpicksheetfunction:
     Description: "get pick sheet lambda function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/getPickSheet"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getPickSheet"
   getpicksheetfunctionarn:
     Description: "get pick sheet lambda function arn"
     Value: !GetAtt GetPickSheet.Arn
   getpicksheetfunctionrole:
     Description: "get pick sheet lambda function role"
     Value: !GetAtt GetPickSheetRole.Arn
-
+  savefbppicksfunction:
+    Description: "save fbp picks lambda function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/saveFBPPicks"
+  savefbppicksfunctionarn:
+    Description: "save fbp picks lambda function arn"
+    Value: !GetAtt SaveFBPPicks.Arn
+  savefbppicksfunctionrole:
+    Description: "save fbp picks lambda function role"
+    Value: !GetAtt SaveFBPPicksRole.Arn
 

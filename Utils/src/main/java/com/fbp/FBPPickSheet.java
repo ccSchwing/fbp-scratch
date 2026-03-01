@@ -14,6 +14,7 @@ public class FBPPickSheet {
     private String awayTeam;
     private String homeTeam;
     private String date;
+    private String underdog;
     private String spread;
 
     @DynamoDbPartitionKey
@@ -42,6 +43,11 @@ public class FBPPickSheet {
     @JsonProperty("Date")
     public String getDate() { return date; }
     public void setDate(String date) { this.date = date; }
+
+    @DynamoDbAttribute("Underdog")
+    @JsonProperty("Underdog")
+    public String getUnderdog() { return underdog; }
+    public void setUnderdog(String underdog) { this.underdog = underdog; }
 
     @DynamoDbAttribute("Spread")
     @JsonProperty("Spread")
