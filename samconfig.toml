@@ -3,12 +3,14 @@ version = 0.1
 [default.deploy.parameters]
 stack_name = "fbp-lambda-v3"
 resolve_s3 = true
-s3_prefix = "fbp-lambda"
+s3_prefix = "fbp-lambda-v3"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
 # disable_rollback = true
-parameter_overrides = "FBPUsersTableName=\"FBPUsers\" FBPScheduleTableName=\"2025-Schedule\""
+parameter_overrides = "FBPUsersTableName=\"FBPUsers\" FBPScheduleTableName=\"2025-Schedule\" FBPSpreadTableName=\"2025-Spread\" FBPConfigTableName=\"FBP-Config\" FBPPicksTableName=\"FBP-Picks\" FBPLogsTableName=\"2025-Log\""
 image_repositories = []
+no_fail_on_empty_changeset = true
+disable_rollback = true
 
 [default.global.parameters]
 region = "us-east-1"

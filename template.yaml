@@ -197,9 +197,6 @@ Resources:
         CodeUri: ./GetPickSheet
         Handler: com.fbp.GetPickSheet::getPickSheet
         Runtime: java11
-        AutoPublishAlias: live
-        SnapStart: 
-          ApplyOn: PublishedVersions
         Architectures:
           - x86_64
       # Remove MemorySize here since it's in Globals
@@ -211,6 +208,7 @@ Resources:
             TableName: !Ref FBPConfigTableName
         Environment:
           Variables:
+            PERMISSION_REBUILD: "v1"  # This forces new logical ID Variables:
             FBPScheduleTableName: !Ref FBPScheduleTableName
             FBPConfigTableName: !Ref FBPConfigTableName
         Events:
