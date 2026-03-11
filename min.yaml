@@ -76,3 +76,25 @@ Resources:
           Properties:
             Path: /getFBPUser
             Method: POST
+Outputs:
+  ApiUrl:
+    Description: URL of the API gateway
+    Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
+    Export:
+      Name: !Sub ${AWS::StackName}-ApiUrl
+  AddFBPUserFunction:
+    Description: AddFBPUser Lambda Function ARN
+    Value: !GetAtt AddFBPUser.Arn
+  AddFBPUserApi:
+    Description: AddFBPUser API Endpoint
+    Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/addFBPUser
+    Export:
+      Name: !Sub ${AWS::StackName}-AddFBPUserApi
+  GetFBPUserFunction:
+    Description: GetFBPUser Lambda Function ARN
+    Value: !GetAtt GetFBPUser.Arn
+  GetFBPUserApi:
+    Description: GetFBPUser API Endpoint
+    Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getFBPUser
+    Export:
+      Name: !Sub ${AWS::StackName}-GetFBPUserApi
