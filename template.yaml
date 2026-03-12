@@ -65,7 +65,7 @@ Resources:
   SaveContent:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./SaveContent
+      CodeUri: SaveContent/target/SaveContent-1.0.jar
       Handler: com.fbp.SaveContent::handleRequest
       Runtime: java11
       Architectures:

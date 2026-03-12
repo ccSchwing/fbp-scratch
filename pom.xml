@@ -13,6 +13,8 @@
     <modules>
         <module>GetFBPUser</module>
         <module>AddFBPUser</module>
+        <module>GetPickSheet</module>
+        <module>SaveContent</module>
         <!-- Add other lambda modules here -->
     </modules>
     

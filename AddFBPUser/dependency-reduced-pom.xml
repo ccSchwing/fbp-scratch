@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>adduser</groupId>
   <artifactId>AddFBPUser</artifactId>
-  <name>Add FBP User Project</name>
+  <name>AddFBPUser</name>
   <version>1.0</version>
   <build>
     <plugins>

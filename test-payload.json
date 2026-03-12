@@ -1,3 +1,7 @@
 {
-  "body": "{\"email\":\"test@example.com\",\"firstName\":\"TestUser\",\"lastName\":\"User\",\"displayName\":\"Test User\"}"
+    "httpMethod": "OPTIONS",
+    "headers": {
+        "Origin": "http://localhost:3000"
+    },
+    "path": "/save-content"
 }
