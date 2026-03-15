@@ -21,16 +21,6 @@ public class SaveFBPPicks {
         public APIGatewayProxyResponseEvent saveFBPPicks(APIGatewayProxyRequestEvent request)
                         throws JsonMappingException, JsonProcessingException {
                 APIGatewayProxyResponseEvent response = new APIGatewayProxyResponseEvent();
-                System.out.println("=== Environment Variables ===");
-                System.getenv().forEach((key, value) -> System.out.println(key + " = " + value));
-                System.out.println("=============================");
-                System.out.println("=============================");
-                // ...existing code...
-                String body = request.getBody();
-                Boolean b64 = request.getIsBase64Encoded();
-                System.out.println("isBase64Encoded=" + b64);
-                System.out.println("body length=" + (body == null ? 0 : body.length()));
-                // Add CORS headers to ALL responses
                 Map<String, String> headers = new HashMap<>();
                 headers.put("Access-Control-Allow-Origin", "*");
                 headers.put("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
@@ -44,10 +34,40 @@ public class SaveFBPPicks {
                         response.setBody("");
                         return response;
                 }
+                System.out.println("=== Environment Variables ===");
+                System.getenv().forEach((key, value) -> System.out.println(key + " = " + value));
+                System.out.println("=============================");
+                System.out.println("=============================");
+                // ...existing code...
+                String body = request.getBody();
+                FBPPicks fbpPicks = new ObjectMapper().readValue(body, FBPPicks.class);
+                Boolean b64 = request.getIsBase64Encoded();
+                System.out.println("isBase64Encoded=" + b64);
+                System.out.println("body length=" + (body == null ? 0 : body.length()));
+                // Add CORS headers to ALL responses
                 try {
                         String week = FBPUtils.getCurrentWeek();
-                        ObjectMapper objectMapper = new ObjectMapper();
-                        FBPPicks fbpPicks = objectMapper.readValue(request.getBody(), FBPPicks.class);
+                        if (week == null) {
+                                response = new APIGatewayProxyResponseEvent();
+                                response.setStatusCode(500);
+                                response.setBody("{\"error\": \"Could not determine current week\"}");
+                                response.setHeaders(headers);
+                                return response;
+                        }
+
+                        // get DisplayName from FBPUser table based on email in FBPPicks
+                        String displayName = FBPUtils.getDisplayName(fbpPicks.getEmail());
+                        if (displayName == null) {
+                                response = new APIGatewayProxyResponseEvent();
+                                response.setStatusCode(500);
+                                response.setBody("{\"error\": \"Could not determine display name for email: "
+                                                + fbpPicks.getEmail() + "\"}");
+                                response.setHeaders(headers);
+                                return response;
+                        }
+                        // ObjectMapper objectMapper = new ObjectMapper();
+                        // FBPPicks fbpPicks = objectMapper.readValue(request.getBody(),
+                        // FBPPicks.class);
                         DynamoDbClient dynamoDB = DynamoDbClient.builder().build();
 
                         String tableName = System.getenv("FBPPicksTableName");
@@ -61,7 +81,9 @@ public class SaveFBPPicks {
                                                         AttributeValue.builder().s(fbpPicks.getPicks()).build(),
                                                         "tieBreaker",
                                                         AttributeValue.builder().s(fbpPicks.gettieBreaker()).build(),
-                                                        "week", AttributeValue.builder().s(week).build()))
+                                                        "week", AttributeValue.builder().s(week).build(),
+                                                        "displayName",
+                                                        AttributeValue.builder().s(displayName).build()))
                                         .build();
                         dynamoDB.putItem(putItemRequest);
                         System.out.println("Picks saved: " + fbpPicks.getPicks());
@@ -100,7 +122,8 @@ public class SaveFBPPicks {
                                                         "Access-Control-Allow-Headers",
                                                         "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
                                                         "Access-Control-Allow-Methods", "POST,OPTIONS"))
-                                        .withBody("{\"error\": \"Error processing order: " + e.getMessage().replace("\"", "'") + "\"}");
+                                        .withBody("{\"error\": \"Error processing order: "
+                                                        + e.getMessage().replace("\"", "'") + "\"}");
                 }
         }
 

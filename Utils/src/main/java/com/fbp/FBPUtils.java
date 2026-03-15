@@ -70,6 +70,66 @@ public class FBPUtils {
         }
     }
 
+        public static String getDisplayName(String email) {
+        System.out.println("=== Starting getDisplayName() ===");
+
+        // Check environment variable first
+        String tableName = System
+                .getenv("FBPUsersTableName");
+        System.out.println("Environment variable FBPUsersTableName: " + tableName);
+
+        if (tableName == null || tableName.isEmpty()) {
+            System.err.println("ERROR: Environment variable FBPUsersTableName is not set or empty");
+            return null;
+        }
+
+        try {
+            System.out.println("Creating DynamoDB clients...");
+            DynamoDbClient dynamoDbClient = DynamoDbClient.builder().build();
+            DynamoDbEnhancedClient enhancedClient = DynamoDbEnhancedClient.builder()
+                    .dynamoDbClient(dynamoDbClient)
+                    .build();
+
+            System.out.println("Creating table reference...");
+            DynamoDbTable<FBPUser> table = enhancedClient.table(tableName, TableSchema.fromBean(FBPUser.class));
+
+            System.out.println("Starting table scan...");
+            PageIterable<FBPUser> userPages = table.scan();
+
+            System.out.println("Iterating through scan results...");
+            int itemCount = 0;
+            for (FBPUser user : userPages.items()) {
+                itemCount++;
+                System.out.println("Found item #" + itemCount);
+
+                if (user != null) {
+                    if(user.getEmail() != null && user.getEmail().equals(email)) {
+                    String displayName = user.getDisplayName();
+                    System.out.println("DisplayName value: " + displayName);
+                    return displayName;
+                    }
+
+                } else {
+                    System.out.println("Config object is null");
+                }
+            }
+
+            System.out.println("Total items found: " + itemCount);
+            if (itemCount == 0) {
+                System.out.println("No items found in table - table might be empty");
+                return null;
+            }
+            return null;
+
+        } catch (Exception e) {
+            System.err
+                    .println("EXCEPTION in getDisplayName(): " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            e.printStackTrace();
+            return null;
+
+        }
+    }
+
     public static void logAction(com.fbp.FBPLogAction logCurrentAction) {
         System.out.println("LOG [" + logCurrentAction.getLevel() + "] - User: " + logCurrentAction.getEmail() + ", Action: "
                 + logCurrentAction.getAction() + ", Details: " + logCurrentAction.getDetails());
