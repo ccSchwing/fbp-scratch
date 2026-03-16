@@ -61,7 +61,9 @@ public class GetFBPPicks {
                 response.setHeaders(headers);
                 return response;
             }
-            
+            Integer currentWeek = Integer.valueOf(week);
+            System.out
+                    .println("Fetching FBPPicks for email: " + email + " and week: " + week); 
             // Your DynamoDB logic
             DynamoDbClient dynamoDB = DynamoDbClient.builder().build();
             DynamoDbEnhancedClient enhancedClient = DynamoDbEnhancedClient
@@ -75,7 +77,7 @@ public class GetFBPPicks {
             Expression filterExpression = Expression.builder()
                     .expression("#wk = :week")
                     .putExpressionName("#wk", "week")
-                    .putExpressionValue(":week", AttributeValue.builder().s(week).build())
+                    .putExpressionValue(":week", AttributeValue.builder().n(String.valueOf(currentWeek)).build())
                     .build();
 
             QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
@@ -84,6 +86,15 @@ public class GetFBPPicks {
                     .build();
 
             FBPPicks fbpPicks = table.query(queryRequest).items().stream().findFirst().orElse(null);
+            if (fbpPicks == null) {
+                response = new APIGatewayProxyResponseEvent();
+                response.setStatusCode(404);
+                response.setBody("{\"error\": \"No picks found for email: " + email + " and week: " + week + "\"}");
+                response.setHeaders(headers);
+                return response;
+            }else {
+                System.out.println("FBPPicks retrieved: " + fbpPicks.toString());
+            }
             response = new APIGatewayProxyResponseEvent();
             response.setStatusCode(200);
             response.setBody(mapper.writeValueAsString(fbpPicks));

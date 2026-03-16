@@ -54,6 +54,7 @@ public class SaveFBPPicks {
                                 response.setHeaders(headers);
                                 return response;
                         }
+                        Integer currentWeek = Integer.valueOf(week);
 
                         // get DisplayName from FBPUser table based on email in FBPPicks
                         String displayName = FBPUtils.getDisplayName(fbpPicks.getEmail());
@@ -80,8 +81,8 @@ public class SaveFBPPicks {
                                                         "picks",
                                                         AttributeValue.builder().s(fbpPicks.getPicks()).build(),
                                                         "tieBreaker",
-                                                        AttributeValue.builder().s(fbpPicks.gettieBreaker()).build(),
-                                                        "week", AttributeValue.builder().s(week).build(),
+                                                        AttributeValue.builder().n(String.valueOf(fbpPicks.getTieBreaker())).build(),
+                                                        "week", AttributeValue.builder().n(String.valueOf(currentWeek)).build(),
                                                         "displayName",
                                                         AttributeValue.builder().s(displayName).build()))
                                         .build();
@@ -95,7 +96,7 @@ public class SaveFBPPicks {
                         logCurrentAction.setDetails("Picks saved successfully: " +
                                         fbpPicks.getPicks() +
                                         ":" +
-                                        fbpPicks.gettieBreaker());
+                                        fbpPicks.getTieBreaker());
                         logCurrentAction.setLevel("INFO");
                         com.fbp.FBPUtils.logAction(logCurrentAction);
                         return new APIGatewayProxyResponseEvent().withStatusCode(200)

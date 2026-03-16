@@ -7,9 +7,10 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 @DynamoDbBean
 public class FBPPicks {
     public String email;
-
+    public String displayName;
     public String picks;
-    public String tieBreaker;
+    public Integer tieBreaker;
+    public Integer week;
 
 
     @DynamoDbPartitionKey
@@ -18,6 +19,14 @@ public class FBPPicks {
     }
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    @DynamoDbAttribute("displayName")
+    public String getDisplayName() {
+        return this.displayName;
+    }
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 
     @DynamoDbAttribute("picks")
@@ -30,19 +39,30 @@ public class FBPPicks {
     }
 
     @DynamoDbAttribute("tieBreaker")
-    public String gettieBreaker() {
+    public Integer getTieBreaker() {
         return this.tieBreaker;
     }
 
-    public void settieBreaker(String tieBreaker) {
+    public void setTieBreaker(Integer tieBreaker) {
         this.tieBreaker = tieBreaker;
     }
+
+    @DynamoDbAttribute("week")
+    public Integer getWeek() {
+        return this.week;
+    }
+    public void setWeek(Integer week) {
+        this.week = week;
+    }
+
     @Override
     public String toString() {
         return "{" +
             " email='" + getEmail() + "'" +
+            ", displayName='" + getDisplayName() + "'" +
             ", picks='" + getPicks() + "'" +
-            ", tieBreaker='" + gettieBreaker() + "'" +
+            ", tieBreaker='" + getTieBreaker() + "'" +
+            ", week='" + getWeek() + "'" +
             "}";
     }
 }
