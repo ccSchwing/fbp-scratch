@@ -147,7 +147,7 @@ Resources:
   GetScheduleSheet:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: GetScheduleSheet/
+      CodeUri: GetScheduleSheet/target/GetScheduleSheet-1.0.jar
       Handler: com.fbp.GetScheduleSheet::getScheduleSheet
       Runtime: java11
       Architectures:
@@ -155,7 +155,7 @@ Resources:
       # Remove MemorySize here since it's in Globals
       # Remove Environment here since it's in Globals
       Policies:
-        - DynamoDBReadPolicy:
+        - DynamoDBCrudPolicy:
             TableName: !Ref FBPScheduleTableName
         - DynamoDBReadPolicy:
             TableName: !Ref FBPConfigTableName
