@@ -1,0 +1,8 @@
+{
+  "httpMethod": "GET",
+  "path": "/getWeeklyResults",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "isBase64Encoded": false
+}

@@ -17,6 +17,8 @@
         <module>SaveContent</module>
         <module>SaveFBPPicks</module>
         <module>GetFBPPicks</module>
+        <module>GetScheduleSheet</module>
+        <module>GetWeeklyResults</module>
         <!-- Add other lambda modules here -->
     </modules>
     

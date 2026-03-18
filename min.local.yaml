@@ -174,6 +174,42 @@ Resources:
             Properties:
               Path: /getScheduleSheet
               Method: OPTIONS
+  GetWeeklyResults:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: GetWeeklyResults/
+      Handler: com.fbp.GetWeeklyResults::getWeeklyResults
+      Runtime: java11
+      Architectures:
+        - x86_64
+      # Remove MemorySize here since it's in Globals
+      # Remove Environment here since it's in Globals
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPScheduleTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPPicksTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPConfigTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPUsersTableName
+      Environment:
+        Variables:
+          FBPScheduleTableName: !Ref FBPScheduleTableName
+          FBPPicksTableName: !Ref FBPPicksTableName
+          FBPConfigTableName: !Ref FBPConfigTableName
+          FBPUsersTableName: !Ref FBPUsersTableName
+      Events:
+        GetWeeklyResultsGet:
+          Type: Api
+          Properties:
+            Path: /getWeeklyResults
+            Method: GET
+          GetWeeklyResultsOptions:
+            Type: Api
+            Properties:
+              Path: /getWeeklyResults
+              Method: OPTIONS
 
     SaveContent:
       Type: AWS::Serverless::Function
@@ -276,7 +312,7 @@ Resources:
               Path: /saveFBPPicks
               Method: OPTIONS
 
-  Outputs:
+Outputs:
     ApiUrl:
       Description: URL of the API gateway
       Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
@@ -309,6 +345,8 @@ Resources:
     SaveContentFunction:
       Description: SaveContent Lambda Function ARN
       Value: !GetAtt SaveContent.Arn
+      Export: 
+        Name: !Sub ${AWS::StackName}-SaveContentFunction  
     SaveContentApi:
       Description: SaveContent API Endpoint
       Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/save-content
@@ -317,6 +355,8 @@ Resources:
     SaveFBPPicksFunction:
       Description: SaveFBPPicks Lambda Function ARN
       Value: !GetAtt SaveFBPPicks.Arn
+      Export:
+        Name: !Sub ${AWS::StackName}-SaveFBPPicksFunction
     SaveFBPPicksApi:
       Description: SaveFBPPicks API Endpoint
       Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/saveFBPPicks
@@ -325,16 +365,18 @@ Resources:
     GetFBPPicksFunction:
       Description: GetFBPPicks Lambda Function ARN
       Value: !GetAtt GetFBPPicks.Arn
+      Export:
+        Name: !Sub ${AWS::StackName}-GetFBPPicksFunction
     GetFBPPicksApi:
-    Description: GetFBPPicks API Endpoint
-    Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getFBPPicks
-    Export:
-      Name: !Sub ${AWS::StackName}-GetFBPPicksApi
-  GetScheuleSheetFunction:
-    Description: GetScheduleSheet Lambda Function ARN
-    Value: !GetAtt GetScheduleSheet.Arn
-  GetScheduleSheetApi:
-    Description: GetScheduleSheet API Endpoint
-    Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getScheduleSheet
-    Export:
-      Name: !Sub ${AWS::StackName}-GetScheduleSheetApi
+      Description: GetFBPPicks API Endpoint
+      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getFBPPicks
+      Export:
+        Name: !Sub ${AWS::StackName}-GetFBPPicksApi
+    GetWeeklyResultsFunction:
+      Description: GetWeeklyResults Lambda Function ARN
+      Value: !GetAtt GetWeeklyResults.Arn
+    GetWeeklyResultsApi:
+      Description: GetWeeklyResults API Endpoint
+      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getWeeklyResults
+      Export:
+        Name: !Sub ${AWS::StackName}-GetWeeklyResultsApi

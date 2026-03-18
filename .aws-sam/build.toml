@@ -9,8 +9,8 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["GetScheduleSheet"]
 
-[function_build_definitions.8276549f-9b38-4d94-a97d-5df7d10c7e62]
-codeuri = "/Users/ccs/projects/fbp-lambda/AddFBPUser/target/AddFBPUser-1.0.jar"
+[function_build_definitions.ba6b0e05-af71-4c69-8e20-19c552b691ac]
+codeuri = "/Users/ccs/projects/fbp-lambda/AddFBPUser"
 runtime = "java11"
 architecture = "x86_64"
 handler = "com.fbp.AddFBPUser::addFBPUser"
@@ -18,8 +18,8 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["AddFBPUser"]
 
-[function_build_definitions.d198526d-8aa5-405b-a4f8-a51cb1a62b97]
-codeuri = "/Users/ccs/projects/fbp-lambda/GetFBPPicks/target/GetFBPPicks-1.0.jar"
+[function_build_definitions.74fe9dc3-48a3-4f9b-9e91-9e5060b5b1f8]
+codeuri = "/Users/ccs/projects/fbp-lambda/GetFBPPicks"
 runtime = "java11"
 architecture = "x86_64"
 handler = "com.fbp.GetFBPPicks::getFBPPicks"
@@ -27,8 +27,8 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["GetFBPPicks"]
 
-[function_build_definitions.c0b8fde2-5718-4244-8426-1d9d04834feb]
-codeuri = "/Users/ccs/projects/fbp-lambda/GetFBPUser/target/GetFBPUser-1.0.jar"
+[function_build_definitions.01b4d54e-638d-42d6-be97-529736bf622e]
+codeuri = "/Users/ccs/projects/fbp-lambda/GetFBPUser"
 runtime = "java11"
 architecture = "x86_64"
 handler = "com.fbp.GetFBPUser::getFBPUser"
@@ -36,8 +36,8 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["GetFBPUser"]
 
-[function_build_definitions.156b4613-aabb-443c-85e8-c04fee29c343]
-codeuri = "/Users/ccs/projects/fbp-lambda/GetPickSheet/target/GetPickSheet-1.0.jar"
+[function_build_definitions.9f91b84c-0f2c-4c01-a572-86b54c24ac76]
+codeuri = "/Users/ccs/projects/fbp-lambda/GetPickSheet"
 runtime = "java11"
 architecture = "x86_64"
 handler = "com.fbp.GetPickSheet::getPickSheet"
@@ -45,22 +45,13 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["GetPickSheet"]
 
-[function_build_definitions.d1ff8a7f-d874-41f2-9cd4-acd60ebbbd86]
-codeuri = "/Users/ccs/projects/fbp-lambda/SaveContent/target/SaveContent-1.0.jar"
+[function_build_definitions.032d236f-e926-436d-b4bc-95086538304f]
+codeuri = "/Users/ccs/projects/fbp-lambda/GetWeeklyResults"
 runtime = "java11"
 architecture = "x86_64"
-handler = "com.fbp.SaveContent::handleRequest"
+handler = "com.fbp.GetWeeklyResults::getWeeklyResults"
 manifest_hash = ""
 packagetype = "Zip"
-functions = ["SaveContent"]
-
-[function_build_definitions.1a78c249-031f-49e3-ad47-e7da18ad55da]
-codeuri = "/Users/ccs/projects/fbp-lambda/SaveFBPPicks/target/SaveFBPPicks-1.0.jar"
-runtime = "java11"
-architecture = "x86_64"
-handler = "com.fbp.SaveFBPPicks::saveFBPPicks"
-manifest_hash = ""
-packagetype = "Zip"
-functions = ["SaveFBPPicks"]
+functions = ["GetWeeklyResults"]
 
 [layer_build_definitions]
