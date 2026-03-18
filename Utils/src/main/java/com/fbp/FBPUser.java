@@ -17,6 +17,8 @@ public class FBPUser {
     public String defaultAlgorithm;     // Random, Favorites, Underdogs, etc.
     public Boolean isAccountLocked;
     public Boolean isPaidUser;
+    public String totalCorrectPicks;
+    public String totalIncorrectPicks;
 
     public FBPUser() {
         super();
@@ -102,5 +104,19 @@ public class FBPUser {
     }
     public void setIsPaidUser(Boolean isPaidUser) {
         this.isPaidUser = isPaidUser;
+    }
+    @DynamoDbAttribute("totalCorrectPicks")
+    public String getTotalCorrectPicks() {
+        return totalCorrectPicks;
+    }
+    public void setTotalCorrectPicks(String totalCorrectPicks) {
+        this.totalCorrectPicks = totalCorrectPicks;
+    }
+    @DynamoDbAttribute("totalIncorrectPicks")
+    public String getTotalIncorrectPicks() {
+        return totalIncorrectPicks;
+    }
+    public void setTotalIncorrectPicks(String totalIncorrectPicks) {
+        this.totalIncorrectPicks = totalIncorrectPicks;
     }
 }

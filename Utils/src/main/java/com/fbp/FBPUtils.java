@@ -3,6 +3,9 @@ package com.fbp;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.stream.Collectors;
+
 
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
@@ -70,6 +73,42 @@ public class FBPUtils {
         }
     }
 
+    // Get all of the users from FBP-Users.  Used by the GetWeeklyResults lambda to get the list of
+    //  users to update with the results of the picks for each user for the week.
+    public static List<FBPUser> getAllUsers() {
+        System.out.println("=== Starting getAllUsers() ===");
+        String tableName = System
+                .getenv("FBPUsersTableName");
+        System.out.println("Environment variable FBPUsersTableName: " + tableName);
+        if (tableName == null || tableName.isEmpty()) {
+            System.err.println("ERROR: Environment variable FBPUsersTableName is not set or empty");
+            return null;
+        }
+        try {
+            System.out.println("Creating DynamoDB clients...");
+            DynamoDbClient dynamoDbClient = DynamoDbClient.builder().build();
+            DynamoDbEnhancedClient enhancedClient = DynamoDbEnhancedClient.builder()
+                    .dynamoDbClient(dynamoDbClient)
+                    .build();
+
+            System.out.println("Creating table reference...");
+            DynamoDbTable<FBPUser> table = enhancedClient.table(tableName, TableSchema.fromBean(FBPUser.class));
+
+            System.out.println("Starting table scan...");
+            PageIterable<FBPUser> userPages = table.scan();
+
+            System.out.println("Iterating through scan results...");
+            List<FBPUser> users = userPages.items().stream().collect(Collectors.toList());
+            System.out.println("Total users found: " + users.size());
+            return users;
+
+        } catch (Exception e) {
+            System.err
+                    .println("EXCEPTION in getAllUsers(): " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
         public static String getDisplayName(String email) {
         System.out.println("=== Starting getDisplayName() ===");
 
