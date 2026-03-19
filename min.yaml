@@ -274,6 +274,43 @@ Resources:
           Properties:
             Path: /saveFBPPicks
             Method: OPTIONS
+  GetWeeklyResults:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: GetWeeklyResults/target/GetWeeklyResults-1.0.jar
+      Handler: com.fbp.GetWeeklyResults::getWeeklyResults
+      Runtime: java11
+      Architectures:
+        - x86_64
+      # Remove MemorySize here since it's in Globals
+      # Remove Environment here since it's in Globals
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPScheduleTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPPicksTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPConfigTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPUsersTableName
+      Environment:
+        Variables:
+          FBPScheduleTableName: !Ref FBPScheduleTableName
+          FBPPicksTableName: !Ref FBPPicksTableName
+          FBPConfigTableName: !Ref FBPConfigTableName
+          FBPUsersTableName: !Ref FBPUsersTableName
+      Events:
+        GetWeeklyResultsGet:
+          Type: Api
+          Properties:
+            Path: /getWeeklyResults
+            Method: GET
+          GetWeeklyResultsOptions:
+            Type: Api
+            Properties:
+              Path: /getWeeklyResults
+              Method: OPTIONS
+
 
 Outputs:
   ApiUrl:
@@ -337,3 +374,11 @@ Outputs:
     Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getScheduleSheet
     Export:
       Name: !Sub ${AWS::StackName}-GetScheduleSheetApi
+  GetWeeklyResultsFunction:
+    Description: GetWeeklyResults Lambda Function ARN
+    Value: !GetAtt GetWeeklyResults.Arn
+  GetWeeklyResultsApi:
+    Description: GetWeeklyResults API Endpoint
+    Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getWeeklyResults
+    Export:
+      Name: !Sub ${AWS::StackName}-GetWeeklyResultsApi

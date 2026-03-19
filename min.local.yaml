@@ -87,6 +87,7 @@ Resources:
           Properties:
             Path: /getFBPPicks
             Method: OPTIONS
+
   GetFBPUser:
     Type: AWS::Serverless::Function
     Properties:
@@ -169,11 +170,11 @@ Resources:
           Properties:
             Path: /getScheduleSheet
             Method: GET
-          GetScheduleSheetOptions:
-            Type: Api
-            Properties:
-              Path: /getScheduleSheet
-              Method: OPTIONS
+        GetScheduleSheetOptions:
+          Type: Api
+          Properties:
+            Path: /getScheduleSheet
+            Method: OPTIONS
   GetWeeklyResults:
     Type: AWS::Serverless::Function
     Properties:
@@ -205,13 +206,13 @@ Resources:
           Properties:
             Path: /getWeeklyResults
             Method: GET
-          GetWeeklyResultsOptions:
-            Type: Api
-            Properties:
-              Path: /getWeeklyResults
-              Method: OPTIONS
+        GetWeeklyResultsOptions:
+          Type: Api
+          Properties:
+            Path: /getWeeklyResults
+            Method: OPTIONS
 
-    SaveContent:
+  SaveContent:
       Type: AWS::Serverless::Function
       Properties:
         CodeUri: SaveContent/
@@ -238,11 +239,11 @@ Resources:
             Properties:
               Path: /save-content
               Method: OPTIONS
-      ContentSaverDashboard:
-        Type: AWS::CloudWatch::Dashboard
-        Properties:
-        DashboardName: !Sub ${AWS::StackName}
-        DashboardBody: !Sub |
+  ContentSaverDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Sub ${AWS::StackName}
+      DashboardBody: !Sub |
           {
             "widgets": [
               {
@@ -275,42 +276,42 @@ Resources:
               }
             ]
           }
-    SaveFBPPicks:
-      Type: AWS::Serverless::Function
-      Properties:
-        CodeUri: SaveFBPPicks/
-        Handler: com.fbp.SaveFBPPicks::saveFBPPicks
-        Runtime: java11
-        # AutoPublishAlias: live
-        SnapStart: null # ApplyOn: PublishedVersions
-        Architectures:
-          - x86_64
-        Policies:
-          - DynamoDBCrudPolicy:
-              TableName: !Ref FBPPicksTableName
-          - DynamoDBCrudPolicy:
-              TableName: !Ref FBPLogsTableName
-          - DynamoDBReadPolicy:
-              TableName: !Ref FBPUsersTableName
-          - DynamoDBReadPolicy:
-              TableName: !Ref FBPConfigTableName
-        Environment:
-          Variables:
-            FBPPicksTableName: !Ref FBPPicksTableName
-            FBPLogsTableName: !Ref FBPLogsTableName
-            FBPUsersTableName: !Ref FBPUsersTableName
-            FBPConfigTableName: !Ref FBPConfigTableName
-        Events:
-          SaveFBPPicks:
-            Type: Api
-            Properties:
-              Path: /saveFBPPicks
-              Method: POST
-          SaveFBPPicksOptions:
-            Type: Api
-            Properties:
-              Path: /saveFBPPicks
-              Method: OPTIONS
+  SaveFBPPicks:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: SaveFBPPicks/
+      Handler: com.fbp.SaveFBPPicks::saveFBPPicks
+      Runtime: java11
+      # AutoPublishAlias: live
+      SnapStart: null # ApplyOn: PublishedVersions
+      Architectures:
+        - x86_64
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPPicksTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPLogsTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPUsersTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPConfigTableName
+      Environment:
+        Variables:
+          FBPPicksTableName: !Ref FBPPicksTableName
+          FBPLogsTableName: !Ref FBPLogsTableName
+          FBPUsersTableName: !Ref FBPUsersTableName
+          FBPConfigTableName: !Ref FBPConfigTableName
+      Events:
+        SaveFBPPicks:
+          Type: Api
+          Properties:
+            Path: /saveFBPPicks
+            Method: POST
+        SaveFBPPicksOptions:
+          Type: Api
+          Properties:
+            Path: /saveFBPPicks
+            Method: OPTIONS
 
 Outputs:
     ApiUrl:
