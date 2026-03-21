@@ -33,25 +33,16 @@ public class GetWeeklyResults {
             return response;
         }
         System.out.println("=== Starting getScheduleSheet() ===");
-        String week = FBPUtils.getCurrentWeek();
+        Integer week = FBPUtils.getCurrentWeek();
         System.out.println("Determined week: " + week);
 
-         if (week == null || week.isBlank()) {
+         if (week == null ){
              return new APIGatewayProxyResponseEvent()
                  .withStatusCode(400)
                  .withHeaders(headers)
                  .withBody(new ObjectMapper().writeValueAsString(Map.of("error", "Could not get week from FBPConfig table")));
         }
 
-        final double weekNumber;
-        try {
-            weekNumber = Double.parseDouble(week);
-        } catch (NumberFormatException e) {
-            return new APIGatewayProxyResponseEvent()
-                .withStatusCode(400)
-                .withHeaders(headers)
-                .withBody(new ObjectMapper().writeValueAsString(Map.of("error", "Invalid week format: " + week)));
-        }
 
         DynamoDbClient dynamoDbClient = DynamoDbClient.builder().build();
         DynamoDbEnhancedClient enhancedClient = DynamoDbEnhancedClient.builder()
@@ -62,14 +53,12 @@ public class GetWeeklyResults {
             enhancedClient.table(System.getenv("FBPScheduleTableName"), TableSchema.fromClass(FBPPicksResult.class));
         try {
             System.out.println("Querying for schedule sheet for week: " + week);
-            List<FBPPicksResult> picksRows = table.query(QueryConditional.keyEqualTo(Key.builder().partitionValue(weekNumber).build()))
+            List<FBPPicksResult> picksRows = 
+            table.query(QueryConditional.keyEqualTo(Key.builder().partitionValue(week).build()))
                 .items()
                 .stream()
                 .collect(Collectors.toList());
-            // Call a method to get the picks for all users and update the FBP-Users table 
-            // with the results of the picks for each user.  This will be used to display 
-            // the results of the picks for each user in the frontend.
-            getPicksResultsForAllUsers(weekNumber, picksRows);
+            getPicksResultsForAllUsers(week, picksRows);
             System.out.println("Retrieved " + picksRows.size() + " items from DynamoDB for week " + week);
 
             return new APIGatewayProxyResponseEvent()
@@ -83,7 +72,7 @@ public class GetWeeklyResults {
                 .withBody(new ObjectMapper().writeValueAsString(Map.of("error", e.getMessage())));
         }
     }
-    private void getPicksResultsForAllUsers(double weekNumber, List<FBPPicksResult> picksRows) throws JsonProcessingException {
+    private void getPicksResultsForAllUsers(double week, List<FBPPicksResult> picksRows) throws JsonProcessingException {
         // This method will get the picks for all users for the given week and update the FBP-Users table with the results of the picks for each user.
         // You will need to implement this method to get the picks for all users and update the FBP-Users table with the results of the picks for each user.
         // This will be used to display the results of the picks for each user in the frontend.
@@ -126,7 +115,7 @@ public class GetWeeklyResults {
                 correctPicks=0;
                 incorrectPicks=0;                   
           } // End of picksRows loop
-            System.out.println("User " + userPicks.getEmail() + " has " + actualCorrectPicks + " correct picks and " + actualIncorrectPicks + " incorrect picks for week " + weekNumber);
+            System.out.println("User " + userPicks.getEmail() + " has " + actualCorrectPicks + " correct picks and " + actualIncorrectPicks + " incorrect picks for week " + week);
             // Update the FBP-Users table with the results of the picks for each user.
             // You will need to implement this logic to update the FBP-Users table with the results of the picks for each user.
              // For example, you could update the FBP-Users table with the following fields:
@@ -149,7 +138,7 @@ public class GetWeeklyResults {
             FBPWeeklyResult weeklyResult = new FBPWeeklyResult();
             weeklyResult.setEmail(userPicks.getEmail());
             weeklyResult.setDisplayName(user.getDisplayName());
-            weeklyResult.setWeek(weekNumber);
+            weeklyResult.setWeek(week);
             weeklyResult.setCorrectPicks(actualCorrectPicks);
             weeklyResult.setIncorrectPicks(actualIncorrectPicks);
             weeklyResult.setWinner(false); // You will need to implement logic to determine the winner for the week and set this field accordingly.

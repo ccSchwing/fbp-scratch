@@ -4,7 +4,7 @@ package com.fbp;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
 /*
     This class represents the results of a game for a given week, including the winner.
     It is used to get the results of the User's picks and determine how many
@@ -40,6 +40,7 @@ public class FBPWeeklyResult {
     public Integer getIncorrectPicks() { return incorrectPicks; }
     public void setIncorrectPicks(Integer incorrectPicks) { this.incorrectPicks = incorrectPicks; }
 
+    @DynamoDbSecondaryPartitionKey(indexNames = {"WeekIndex"})
     @DynamoDbAttribute("Week")
     public double getWeek() { return week; }
     public void setWeek(double week) { this.week = week; }

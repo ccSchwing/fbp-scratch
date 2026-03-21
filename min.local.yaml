@@ -119,6 +119,40 @@ Resources:
           Properties:
             Path: /getFBPUser
             Method: OPTIONS
+  GetFBPPicksForUser:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: GetFBPPicksForUser/
+      Handler: com.fbp.GetFBPPicksForUser::getFBPPicksForUser
+      Runtime: java11
+      Architectures:
+        - x86_64
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPPicksTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPLogsTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPUsersTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPConfigTableName
+      Environment:
+        Variables:
+          FBPPicksTableName: !Ref FBPPicksTableName
+          FBPLogsTableName: !Ref FBPLogsTableName
+          FBPUsersTableName: !Ref FBPUsersTableName
+          FBPConfigTableName: !Ref FBPConfigTableName
+      Events:
+        GetFBPPicksForUser:
+          Type: Api
+          Properties:
+            Path: /getFBPPicksForUser
+            Method: POST
+        GetFBPPicksForUserOptions:
+          Type: Api
+          Properties:
+            Path: /getFBPPicksForUser
+            Method: OPTIONS
   GetPickSheet:
     Type: AWS::Serverless::Function
     Properties:
@@ -217,6 +251,37 @@ Resources:
           Type: Api
           Properties:
             Path: /getWeeklyResults
+            Method: OPTIONS
+  GetWeeklyResultsSheet:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: GetWeeklyResultsSheet/
+      Handler: com.fbp.GetWeeklyResultsSheet::getWeeklyResultsSheet
+      Runtime: java11
+      Architectures:
+        - x86_64
+      # Remove MemorySize here since it's in Globals
+      # Remove Environment here since it's in Globals
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPWeeklyResultsTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPConfigTableName
+      Environment:
+        Variables:
+          FBPWeeklyResultsTableName: !Ref FBPWeeklyResultsTableName
+          FBPWeeklyResultsWeekIndexName: WeekIndex
+          FBPConfigTableName: !Ref FBPConfigTableName
+      Events:
+        GetWeeklyResultSheetGet:
+          Type: Api
+          Properties:
+            Path: /getWeeklyResultsSheet
+            Method: GET
+        GetWeeklyResultsSheetOptions:
+          Type: Api
+          Properties:
+            Path: /getWeeklyResultsSheet
             Method: OPTIONS
 
   SaveContent:
@@ -388,3 +453,11 @@ Outputs:
       Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getWeeklyResults
       Export:
         Name: !Sub ${AWS::StackName}-GetWeeklyResultsApi
+    GetFBPPkicksForUserFunction:
+      Description: GetFBPPicksForUser Lambda Function ARN
+      Value: !GetAtt GetFBPPicksForUser.Arn
+    GetFBPPicksForUserApi:
+      Description: GetFBPPicksForUser API Endpoint
+      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getFBPPicksForUser
+      Export:
+        Name: !Sub ${AWS::StackName}-GetFBPPicksForUserApi

@@ -46,7 +46,7 @@ public class SaveFBPPicks {
                 System.out.println("body length=" + (body == null ? 0 : body.length()));
                 // Add CORS headers to ALL responses
                 try {
-                        String week = FBPUtils.getCurrentWeek();
+                        Integer week = FBPUtils.getCurrentWeek();
                         if (week == null) {
                                 response = new APIGatewayProxyResponseEvent();
                                 response.setStatusCode(500);
@@ -54,7 +54,6 @@ public class SaveFBPPicks {
                                 response.setHeaders(headers);
                                 return response;
                         }
-                        Integer currentWeek = Integer.valueOf(week);
 
                         // get DisplayName from FBPUser table based on email in FBPPicks
                         String displayName = FBPUtils.getDisplayName(fbpPicks.getEmail());
@@ -82,7 +81,7 @@ public class SaveFBPPicks {
                                                         AttributeValue.builder().s(fbpPicks.getPicks()).build(),
                                                         "tieBreaker",
                                                         AttributeValue.builder().n(String.valueOf(fbpPicks.getTieBreaker())).build(),
-                                                        "week", AttributeValue.builder().n(String.valueOf(currentWeek)).build(),
+                                                        "week", AttributeValue.builder().n(String.valueOf(week)).build(),
                                                         "displayName",
                                                         AttributeValue.builder().s(displayName).build()))
                                         .build();
@@ -90,7 +89,7 @@ public class SaveFBPPicks {
                         System.out.println("Picks saved: " + fbpPicks.getPicks());
                         System.out.println("Table Name from ENV: " + tableName);
                         FBPLogAction logCurrentAction = new FBPLogAction();
-                        logCurrentAction.setWeek(week);
+                        logCurrentAction.setWeek(String.valueOf(week));
                         logCurrentAction.setEmail(fbpPicks.getEmail());
                         logCurrentAction.setAction("Save Picks");
                         logCurrentAction.setDetails("Picks saved successfully: " +

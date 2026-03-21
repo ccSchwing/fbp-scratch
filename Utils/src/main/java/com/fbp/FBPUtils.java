@@ -16,7 +16,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 
 public class FBPUtils {
-    public static String getCurrentWeek() {
+    public static Integer getCurrentWeek() {
         System.out.println("=== Starting getCurrentWeek() ===");
 
         // Check environment variable first
@@ -49,7 +49,7 @@ public class FBPUtils {
                 System.out.println("Found item #" + itemCount);
 
                 if (config != null) {
-                    String week = config.getWeek();
+                    Integer week = config.getWeek();
                     System.out.println("Week value: " + week);
                     return week;
                 } else {

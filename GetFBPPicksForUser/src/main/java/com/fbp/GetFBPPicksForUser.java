@@ -10,16 +10,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
-import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
-public class GetFBPPicks {
-    public APIGatewayProxyResponseEvent getFBPPicks(APIGatewayProxyRequestEvent request) {
+public class GetFBPPicksForUser {
+    public APIGatewayProxyResponseEvent getFBPPicksForUser(APIGatewayProxyRequestEvent request) {
         APIGatewayProxyResponseEvent response = new APIGatewayProxyResponseEvent();
         Map<String, String> headers = new HashMap<>();
         headers.put("Access-Control-Allow-Origin", "*");
@@ -73,18 +71,16 @@ public class GetFBPPicks {
             String tableName = System.getenv("FBPPicksTableName");
             DynamoDbTable<FBPPicks> table = enhancedClient.table(tableName, TableSchema.fromBean(FBPPicks.class));
 
-            Expression filterExpression = Expression.builder()
-                    .expression("#wk = :week")
-                    .putExpressionName("#wk", "week")
-                    .putExpressionValue(":week", AttributeValue.builder().n(String.valueOf(week)).build())
-                    .build();
-
             QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
                     .queryConditional(QueryConditional.keyEqualTo(Key.builder().partitionValue(email).build()))
-                    .filterExpression(filterExpression)
                     .build();
 
-            FBPPicks fbpPicks = table.query(queryRequest).items().stream().findFirst().orElse(null);
+                FBPPicks fbpPicks = table.query(queryRequest)
+                    .items()
+                    .stream()
+                    .filter(item -> item.getWeek() != null && item.getWeek().equals(week))
+                    .findFirst()
+                    .orElse(null);
             if (fbpPicks == null) {
                 response = new APIGatewayProxyResponseEvent();
                 response.setStatusCode(207);

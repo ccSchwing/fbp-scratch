@@ -72,4 +72,22 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["SaveFBPPicks"]
 
+[function_build_definitions.72a9ecab-018c-4aea-8dea-88de4166bf40]
+codeuri = "/Users/ccs/projects/fbp-lambda/GetWeeklyResultsSheet"
+runtime = "java11"
+architecture = "x86_64"
+handler = "com.fbp.GetWeeklyResultsSheet::getWeeklyResultsSheet"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["GetWeeklyResultsSheet"]
+
+[function_build_definitions.153c50c5-1ab7-4765-a26b-e0266269c4aa]
+codeuri = "/Users/ccs/projects/fbp-lambda/GetFBPPicksForUser"
+runtime = "java11"
+architecture = "x86_64"
+handler = "com.fbp.GetFBPPicksForUser::getFBPPicksForUser"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["GetFBPPicksForUser"]
+
 [layer_build_definitions]

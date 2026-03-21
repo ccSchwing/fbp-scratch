@@ -5,23 +5,33 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 
 @DynamoDbBean
 public class FBPConfig {
-    private String week;
+    private Integer week;
+    private Boolean poolOpen;
 
     public FBPConfig() {}
 
     @DynamoDbPartitionKey
     @DynamoDbAttribute("Week")  // Map to the actual DynamoDB attribute name
-    public String getWeek() {
+    public Integer getWeek() {
         return week;
     }
 
-    public void setWeek(String week) {
+    public void setWeek(Integer week) {
         this.week = week;
+    }
+
+    @DynamoDbAttribute("PoolOpen")
+    public Boolean getPoolOpen() {
+        return poolOpen;
+    }
+
+    public void setPoolOpen(Boolean poolOpen) {
+        this.poolOpen = poolOpen;
     }
 
     @Override
     public String toString() {
-        return "FBPConfig{week='" + week + "'}";
+        return "FBPConfig{week='" + week + "', poolOpen='" + poolOpen + "'}";
     }
 }
 
