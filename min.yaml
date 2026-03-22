@@ -33,6 +33,10 @@ Parameters:
     # Added parameter for weekly results table
     Type: String
     Default: FBP-Weekly-Results
+  FBPWeeklyResultsWeekIndexName:
+    # Added parameter for weekly results GSI index name
+    Type: String
+    Default: Week
 
 Resources:
   AddFBPUser:
@@ -338,6 +342,7 @@ Resources:
           FBPConfigTableName: !Ref FBPConfigTableName
           FBPUsersTableName: !Ref FBPUsersTableName
           FBPWeeklyResultsTableName: !Ref FBPWeeklyResultsTableName
+          FBPWeeklyResultsWeekIndexName: !Ref FBPWeeklyResultsWeekIndexName
       Events:
         GetWeeklyResultsGet:
           Type: Api

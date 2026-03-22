@@ -130,8 +130,17 @@ public class GetWeeklyResults {
                  System.out.println("User not found in FBP-Users table for email: " + userPicks.getEmail());
                  continue;
             }
-            user.setTotalCorrectPicks(user.getTotalCorrectPicks() + actualCorrectPicks);
-            user.setTotalIncorrectPicks(user.getTotalIncorrectPicks() + actualIncorrectPicks);
+            // For the first week of the season, we will set the totalCorrectPicks and totalIncorrectPicks
+            // to the actual correct and incorrect picks for the week.
+            // For subsequent weeks, we will add the actual correct and incorrect picks
+            // for the week to the existing totalCorrectPicks and totalIncorrectPicks for the user.
+            if(week == 1) {
+                user.setTotalCorrectPicks(actualCorrectPicks);
+                user.setTotalIncorrectPicks(actualIncorrectPicks);
+            } else {
+                user.setTotalCorrectPicks(user.getTotalCorrectPicks() + actualCorrectPicks);
+                user.setTotalIncorrectPicks(user.getTotalIncorrectPicks() + actualIncorrectPicks);
+            }
             userTable.updateItem(user);
             // Set FBP-Weekly-Results table with the results for each user for the given week.
             DynamoDbTable<FBPWeeklyResult> weeklyResultTable = enhancedClient.table(System.getenv("FBPWeeklyResultsTableName"), TableSchema.fromClass(FBPWeeklyResult.class));
