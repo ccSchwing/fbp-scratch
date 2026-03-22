@@ -58,7 +58,7 @@ public class GetWeeklyResultsSheet {
             enhancedClient.table(System.getenv("FBPWeeklyResultsTableName"), TableSchema.fromClass(FBPWeeklyResult.class));
         try {
             System.out.println("Fetching weekly result sheet for week: " + week);
-            String weekIndexName = System.getenv().getOrDefault("FBPWeeklyResultsWeekIndexName", "WeekIndex");
+            String weekIndexName = System.getenv().getOrDefault("FBPWeeklyResultsWeekIndexName", "Week");
             DynamoDbIndex<FBPWeeklyResult> weekIndex = table.index(weekIndexName);
 
             QueryEnhancedRequest weekQuery = QueryEnhancedRequest.builder()
