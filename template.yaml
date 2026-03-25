@@ -315,3 +315,9 @@ Outputs:
   contentsavedashboard:
     Description: Content Saver CloudWatch Dashboard
     Value: !Ref ContentSaverDashboard
+Metadata:
+  AWS::Composer::Groups:
+    Group:
+      Label: Group
+      Members:
+        - GetFBPUser

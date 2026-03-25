@@ -93,23 +93,30 @@ public class CalcWeeklyResults {
         double spread = row.getSpread();
         String underDog = row.getUnderdog();
         String winner;
+        String HorA="";
         if (underDog.equals(row.getHomeTeam())) {
             if (homeScore + spread > awayScore) {
                 winner = row.getHomeTeam();
+                HorA="H";
             } else {
                 winner = row.getAwayTeam();
+                HorA="A";
             }
         } else {
             if (awayScore + spread > homeScore) {
                 winner = row.getAwayTeam();
+                HorA="A";
+
             } else {
                 winner = row.getHomeTeam();
+                HorA="H";
             }
         }
         System.out.println("Winner: " + winner);
+        System.out.println("HorA: " + HorA);
         // You would then update the schedule row in the DB with the winner/loser
         // information
-        row.setWinner(winner);
+        row.setWinner(HorA);
         return row;
     }
 }
