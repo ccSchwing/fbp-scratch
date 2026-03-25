@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -16,6 +17,12 @@ import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
+/*
+This class retrieves the weekly results for each user based on their picks and the actual game results for the week.
+It queries the FBPWeeklyResults table for the current week and returns the results sorted by the
+number of correct picks. It also updates the winner field for the user with the most correct picks.
+This is used by the front end to display the weekly results sheet for each user.
+*/
 public class GetWeeklyResultsSheet {
     private static final Map<String, String> headers = Map.of(
         "Content-Type", "application/json",
@@ -69,7 +76,19 @@ public class GetWeeklyResultsSheet {
             List<FBPWeeklyResult> picksRows = weekIndex.query(weekQuery)
                 .stream()
                 .flatMap(page -> page.items().stream())
+                .sorted(Comparator.comparingInt(FBPWeeklyResult::getCorrectPicks).reversed())
                 .collect(Collectors.toList());
+            // Set the winner field for top player.
+            if (!picksRows.isEmpty()) {
+                picksRows.get(0).setWinner(true);
+            }
+            // Update the winner field in DynamoDB for the top player.
+            for (FBPWeeklyResult result : picksRows) {
+                if (result.getWinner() != null && result.getWinner()) {
+                    table.updateItem(result);
+                    break; // Only one winner, so we can break after updating the first one.
+                }
+            }
 
             System.out.println("Retrieved " + picksRows.size() + " items from DynamoDB for week " + week);
             return new APIGatewayProxyResponseEvent()

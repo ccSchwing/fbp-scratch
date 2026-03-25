@@ -17,6 +17,13 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
+/*
+ This class calulates the winner/loser for each game 
+ taking into the accout the spread and updates the schedule table with the winner/loser information.
+ This is later used by the GetWeeklyResultsSheet lambda to calculate the weekly results for each user
+ based on their picks and the actual game results.
+ */
+
 public class CalcWeeklyResults {
     public APIGatewayProxyResponseEvent calcWeeklyResults(APIGatewayProxyRequestEvent request)
             throws JsonProcessingException {
@@ -74,6 +81,7 @@ public class CalcWeeklyResults {
                 FBPScheduleRow updatedRow = calculateWinnerLoser(row);
                 table.updateItem(updatedRow);
             }
+
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(200)
                     .withHeaders(headers)
