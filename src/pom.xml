@@ -17,7 +17,7 @@
         <module>SaveContent</module>
         <module>SaveFBPPicks</module>
         <module>GetFBPPicks</module>
-        <module>GetFBPPicksForUser</module>
+        <module>GetAllFBPPicks</module>
         <module>CalcWeeklyResults</module>
         <module>UpdateFinalScores</module>
         <module>GetWeeklyResultsSheet</module>

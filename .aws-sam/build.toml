@@ -27,15 +27,6 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["GetFBPUser"]
 
-[function_build_definitions.b4fde20f-5518-42a9-81d0-f96aea63c743]
-codeuri = "/Users/ccs/projects/fbp-lambda/src/GetFBPPicksForUser"
-runtime = "java11"
-architecture = "x86_64"
-handler = "com.fbp.GetFBPPicksForUser::getFBPPicksForUser"
-manifest_hash = ""
-packagetype = "Zip"
-functions = ["GetFBPPicksForUser"]
-
 [function_build_definitions.5b1b2090-4a95-4e13-bcac-4ebef31ea67d]
 codeuri = "/Users/ccs/projects/fbp-lambda/src/GetPickSheet"
 runtime = "java11"
@@ -98,5 +89,14 @@ handler = "com.fbp.getpresignedurl.GetPreSignedUrlHandler::handleRequest"
 manifest_hash = ""
 packagetype = "Zip"
 functions = ["GetPreSignedUrl"]
+
+[function_build_definitions.ec90d93a-acf8-4740-b65a-a8fc1ac7fec4]
+codeuri = "/Users/ccs/projects/fbp-lambda/src/GetAllFBPPicks"
+runtime = "java11"
+architecture = "x86_64"
+handler = "com.fbp.GetAllFBPPicks::getAllFBPPicks"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["GetAllFBPPicks"]
 
 [layer_build_definitions]

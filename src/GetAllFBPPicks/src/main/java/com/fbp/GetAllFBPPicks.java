@@ -5,19 +5,20 @@ import java.util.Map;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
-import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
-import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import java.util.List;
+import java.util.stream.Collectors;
 
-public class GetFBPPicksForUser {
-    public APIGatewayProxyResponseEvent getFBPPicksForUser(APIGatewayProxyRequestEvent request) {
+public class GetAllFBPPicks {
+    public APIGatewayProxyResponseEvent getAllFBPPicks(APIGatewayProxyRequestEvent request) {
         APIGatewayProxyResponseEvent response = new APIGatewayProxyResponseEvent();
         Map<String, String> headers = new HashMap<>();
         headers.put("Access-Control-Allow-Origin", "*");
@@ -34,24 +35,10 @@ public class GetFBPPicksForUser {
         try {
             // Parse JSON body for POST request
             ObjectMapper mapper = new ObjectMapper();
-            String email = null;
-            System.out.println("Request Body: " + request.getBody());
-            // Add CORS headers
-            if (request.getBody() != null && !request.getBody().isEmpty()) {
-                JsonNode body = mapper.readTree(request.getBody());
-                if (body.has("email")) {
-                    email = body.get("email").asText();
-                }
-            }
 
-            if (email == null || email.isEmpty()) {
-                response = new APIGatewayProxyResponseEvent();
-                response.setStatusCode(400);
-                response.setBody("{\"error\": \"Email is required in request body\"}");
-                response.setHeaders(headers);
-                return response;
-            }
             Integer week = FBPUtils.getCurrentWeek();
+            System.out.println("Current week: " + week);
+            System.out.println("Week type: " + (week != null ? week.getClass().getSimpleName() : "null"));
             if(week == null) {
                 response = new APIGatewayProxyResponseEvent();
                 response.setStatusCode(500);
@@ -59,8 +46,6 @@ public class GetFBPPicksForUser {
                 response.setHeaders(headers);
                 return response;
             }
-            System.out
-                    .println("Fetching FBPPicks for email: " + email + " and week: " + week); 
             // Your DynamoDB logic
             DynamoDbClient dynamoDB = DynamoDbClient.builder().build();
             DynamoDbEnhancedClient enhancedClient = DynamoDbEnhancedClient
@@ -71,21 +56,26 @@ public class GetFBPPicksForUser {
             String tableName = System.getenv("FBPPicksTableName");
             DynamoDbTable<FBPPicks> table = enhancedClient.table(tableName, TableSchema.fromBean(FBPPicks.class));
 
-            QueryEnhancedRequest queryRequest = QueryEnhancedRequest.builder()
-                    .queryConditional(QueryConditional.keyEqualTo(Key.builder().partitionValue(email).build()))
-                    .build();
+            Expression filterExpression = Expression.builder()
+                .expression("week = :weekValue")
+                .expressionValues(Map.of(":weekValue", AttributeValue.builder().n(week.toString()).build()))
+                .build();
 
-                FBPPicks fbpPicks = table.query(queryRequest)
+            ScanEnhancedRequest scanRequest = ScanEnhancedRequest.builder()
+                .filterExpression(filterExpression)
+                .build();
+
+            List<FBPPicks> fbpPicks = table.scan(scanRequest)
                     .items()
                     .stream()
-                    .filter(item -> item.getWeek() != null && item.getWeek().equals(week))
-                    .findFirst()
-                    .orElse(null);
-            if (fbpPicks == null) {
+                    .collect(Collectors.toList());
+
+            System.out.println("FBPPicks size: " + fbpPicks.size());    
+            if (fbpPicks == null || fbpPicks.isEmpty()) {
                 response = new APIGatewayProxyResponseEvent();
-                response.setStatusCode(207);
-                System.out.println("No FBPPicks found for email: " + email + " and week: " + week);
-                response.setBody("{\"success\": \"No picks found for email: " + email + " and week: " + week + "\"}");
+                response.setStatusCode(400);
+                System.out.println("No FBPPicks found for week: " + week);
+                response.setBody("{\"error\": \"No picks found for week: " + week + "\"}");
                 response.setHeaders(headers);
                 return response;
             }else {
