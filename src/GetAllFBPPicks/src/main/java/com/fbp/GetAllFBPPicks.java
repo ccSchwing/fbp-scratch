@@ -15,6 +15,7 @@ import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import java.util.List;
+import java.util.Comparator;
 import java.util.stream.Collectors;
 
 public class GetAllFBPPicks {
@@ -69,6 +70,7 @@ public class GetAllFBPPicks {
             List<FBPPicks> fbpPicks = table.scan(scanRequest)
                     .items()
                     .stream()
+                    .sorted(Comparator.comparing(FBPPicks::getDisplayName, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
                     .collect(Collectors.toList());
 
             System.out.println("FBPPicks size: " + fbpPicks.size());    
