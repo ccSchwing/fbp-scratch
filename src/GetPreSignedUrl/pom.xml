@@ -13,6 +13,12 @@
     </properties>
     <dependencies>
         <dependency>
+            <groupId>com.fbp</groupId>
+            <artifactId>fbpUtils</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-lambda-java-core</artifactId>
             <version>1.2.3</version>

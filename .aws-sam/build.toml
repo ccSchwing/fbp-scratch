@@ -99,4 +99,13 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["GetAllFBPPicks"]
 
+[function_build_definitions.b4cba0cf-ec2c-405e-85f3-a3f845965a60]
+codeuri = "/Users/ccs/projects/fbp-lambda/src"
+runtime = "python3.12"
+architecture = "x86_64"
+handler = "GetPoolOpen.lambda_handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["GetPoolOpenEvent"]
+
 [layer_build_definitions]

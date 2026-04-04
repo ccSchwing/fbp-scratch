@@ -28,6 +28,7 @@ public class GetAllFBPPicks {
         headers.put("Access-Control-Allow-Headers",
                 "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token");
         // Handle OPTIONS preflight request
+        FBPLogAction logEntry = new FBPLogAction();
         if ("OPTIONS".equals(request.getHttpMethod())) {
             response.setStatusCode(200);
             response.setBody("");
@@ -35,19 +36,24 @@ public class GetAllFBPPicks {
             return response;
         }
         try {
-            // Parse JSON body for POST request
-            ObjectMapper mapper = new ObjectMapper();
-
+            logEntry.setAction("GetAllFBPPicks");
+            logEntry.setEmail("fbpadmin@my-fbp.com");
             Integer week = FBPUtils.getCurrentWeek();
-            System.out.println("Current week: " + week);
-            System.out.println("Week type: " + (week != null ? week.getClass().getSimpleName() : "null"));
-            if(week == null) {
+            if (week == null) {
+                logEntry.setLevel("ERROR");
+                logEntry.setDetails("Could not determine current week");
+                FBPUtils.logAction(logEntry);
                 response = new APIGatewayProxyResponseEvent();
                 response.setStatusCode(500);
                 response.setBody("{\"error\": \"Could not determine current week\"}");
                 response.setHeaders(headers);
                 return response;
             }
+            logEntry.setWeek(week.toString());
+            // Parse JSON body for POST request
+            ObjectMapper mapper = new ObjectMapper();
+
+            System.out.println("Current week: " + week);
             // Your DynamoDB logic
             DynamoDbClient dynamoDB = DynamoDbClient.builder().build();
             DynamoDbEnhancedClient enhancedClient = DynamoDbEnhancedClient
@@ -59,31 +65,41 @@ public class GetAllFBPPicks {
             DynamoDbTable<FBPPicks> table = enhancedClient.table(tableName, TableSchema.fromBean(FBPPicks.class));
 
             Expression filterExpression = Expression.builder()
-                .expression("week = :weekValue")
-                .expressionValues(Map.of(":weekValue", AttributeValue.builder().n(week.toString()).build()))
-                .build();
+                    .expression("week = :weekValue")
+                    .expressionValues(Map.of(":weekValue", AttributeValue.builder().n(week.toString()).build()))
+                    .build();
 
             ScanEnhancedRequest scanRequest = ScanEnhancedRequest.builder()
-                .filterExpression(filterExpression)
-                .build();
+                    .filterExpression(filterExpression)
+                    .build();
 
             List<FBPPicks> fbpPicks = table.scan(scanRequest)
                     .items()
                     .stream()
-                    .sorted(Comparator.comparing(FBPPicks::getDisplayName, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
+                    .sorted(Comparator.comparing(FBPPicks::getDisplayName,
+                            Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
                     .collect(Collectors.toList());
 
-            System.out.println("FBPPicks size: " + fbpPicks.size());    
+            System.out.println("FBPPicks size: " + fbpPicks.size());
             if (fbpPicks == null || fbpPicks.isEmpty()) {
+                logEntry = new FBPLogAction();
+                logEntry.setAction("GetAllFBPPicks");
+                logEntry.setEmail("fbpadmin@my-fbp.com");
+                logEntry.setLevel("ERROR");
+                logEntry.setDetails("No picks found for week: " + week);
+                FBPUtils.logAction(logEntry);
                 response = new APIGatewayProxyResponseEvent();
                 response.setStatusCode(400);
                 System.out.println("No FBPPicks found for week: " + week);
                 response.setBody("{\"error\": \"No picks found for week: " + week + "\"}");
                 response.setHeaders(headers);
                 return response;
-            }else {
+            } else {
                 System.out.println("FBPPicks retrieved: " + fbpPicks.toString());
             }
+            logEntry.setLevel("INFO");
+            logEntry.setDetails("Retrieved " + fbpPicks.size() + " picks for week: " + week);
+            FBPUtils.logAction(logEntry);
             response = new APIGatewayProxyResponseEvent();
             response.setStatusCode(200);
             response.setBody(mapper.writeValueAsString(fbpPicks));
@@ -91,6 +107,12 @@ public class GetAllFBPPicks {
             return response;
 
         } catch (Exception e) {
+            logEntry = new FBPLogAction();
+            logEntry.setAction("GetAllFBPPicks");
+            logEntry.setEmail("fbpadmin@my-fbp.com");
+            logEntry.setLevel("ERROR");
+            logEntry.setDetails("Exception occurred: " + e.getMessage());
+            FBPUtils.logAction(logEntry);
             response = new APIGatewayProxyResponseEvent();
             response.setStatusCode(500);
             response.setBody("{\"error\": \"" + e.getMessage() + "\"}");

@@ -21,6 +21,11 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 public class GetFBPPicks {
     public APIGatewayProxyResponseEvent getFBPPicks(APIGatewayProxyRequestEvent request) {
         APIGatewayProxyResponseEvent response = new APIGatewayProxyResponseEvent();
+
+        FBPLogAction logEntry = new FBPLogAction();
+        logEntry.setAction("GetFBPPicks");
+        logEntry.setEmail("fbpadmin@my-fbp.com");
+
         Map<String, String> headers = new HashMap<>();
         headers.put("Access-Control-Allow-Origin", "*");
         headers.put("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
@@ -47,6 +52,9 @@ public class GetFBPPicks {
             }
 
             if (email == null || email.isEmpty()) {
+                logEntry.setLevel("ERROR");
+                logEntry.setDetails("Email is required in request body: " + request.getBody());
+                FBPUtils.logAction(logEntry);
                 response = new APIGatewayProxyResponseEvent();
                 response.setStatusCode(400);
                 response.setBody("{\"error\": \"Email is required in request body\"}");
@@ -55,6 +63,9 @@ public class GetFBPPicks {
             }
             Integer week = FBPUtils.getCurrentWeek();
             if(week == null) {
+                logEntry.setLevel("ERROR");
+                logEntry.setDetails("Could not determine current week");
+                FBPUtils.logAction(logEntry);
                 response = new APIGatewayProxyResponseEvent();
                 response.setStatusCode(500);
                 response.setBody("{\"error\": \"Could not determine current week\"}");
@@ -89,12 +100,20 @@ public class GetFBPPicks {
                 response = new APIGatewayProxyResponseEvent();
                 response.setStatusCode(207);
                 System.out.println("No FBPPicks found for email: " + email + " and week: " + week);
+                logEntry.setLevel("ERROR");
+                logEntry.setDetails("No FBPPicks found for email: " + email + " and week: " + week);
+                FBPUtils.logAction(logEntry);
                 response.setBody("{\"success\": \"No picks found for email: " + email + " and week: " + week + "\"}");
                 response.setHeaders(headers);
                 return response;
             }else {
                 System.out.println("FBPPicks retrieved: " + fbpPicks.toString());
             }
+            logEntry.setLevel("INFO");
+            logEntry.setDetails("Retrieved picks: " + fbpPicks.getPicks() + 
+                ":" + fbpPicks.getTieBreaker() + 
+                "-" + fbpPicks.getDisplayName() + "for email:" + email + " and week:" + week);
+            FBPUtils.logAction(logEntry);
             response = new APIGatewayProxyResponseEvent();
             response.setStatusCode(200);
             response.setBody(mapper.writeValueAsString(fbpPicks));
@@ -102,6 +121,9 @@ public class GetFBPPicks {
             return response;
 
         } catch (Exception e) {
+            logEntry.setLevel("ERROR");
+            logEntry.setDetails("Exception occurred: " + e.getMessage());
+            FBPUtils.logAction(logEntry);
             response = new APIGatewayProxyResponseEvent();
             response.setStatusCode(500);
             response.setBody("{\"error\": \"" + e.getMessage() + "\"}");

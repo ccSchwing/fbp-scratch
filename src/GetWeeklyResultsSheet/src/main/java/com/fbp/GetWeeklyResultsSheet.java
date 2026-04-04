@@ -25,11 +25,10 @@ This is used by the front end to display the weekly results sheet for each user.
 */
 public class GetWeeklyResultsSheet {
     private static final Map<String, String> headers = Map.of(
-        "Content-Type", "application/json",
-        "Access-Control-Allow-Origin", "*",
-        "Access-Control-Allow-Methods", "GET, POST, OPTIONS",
-        "Access-Control-Allow-Headers", "Content-Type,Authorization"
-    );
+            "Content-Type", "application/json",
+            "Access-Control-Allow-Origin", "*",
+            "Access-Control-Allow-Methods", "GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers", "Content-Type,Authorization");
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -47,26 +46,33 @@ public class GetWeeklyResultsSheet {
         if ("OPTIONS".equals(request.getHttpMethod())) {
             return response.withStatusCode(200).withBody("");
         }
+        FBPLogAction logEntry = new FBPLogAction();
+        logEntry.setEmail("fbpadmin@my-fbp.com");
+        logEntry.setAction("GetWeeklyResultsSheet");
+
         System.out.println("=== Starting getWeeklyResultsSheet() ===");
         Integer week = FBPUtils.getCurrentWeek();
-        System.out.println("Determined week: " + week);
-
         if (week == null) {
+            logEntry.setLevel("ERROR");
+            logEntry.setDetails("Could not get week from FBPConfig table");
+            FBPUtils.logAction(logEntry);
             return new APIGatewayProxyResponseEvent()
-                .withStatusCode(400)
-                .withHeaders(headers)
-                .withBody(toJson(Map.of("error", "Could not get week from FBPConfig table")));
+                    .withStatusCode(400)
+                    .withHeaders(headers)
+                    .withBody(toJson(Map.of("error", "Could not get week from FBPConfig table")));
         }
+        System.out.println("week: " + week);
 
+        logEntry.setWeek(week.toString());
         DynamoDbClient dynamoDbClient = DynamoDbClient.builder().build();
         DynamoDbEnhancedClient enhancedClient = DynamoDbEnhancedClient.builder()
-            .dynamoDbClient(dynamoDbClient)
-            .build();
+                .dynamoDbClient(dynamoDbClient)
+                .build();
 
         String tableName = System.getenv("FBPWeeklyResultsTableName");
         System.out.println("Querying DynamoDB table: " + tableName + " for week: " + week);
-        DynamoDbTable<FBPWeeklyResult> table =
-            enhancedClient.table(tableName, TableSchema.fromClass(FBPWeeklyResult.class));
+        DynamoDbTable<FBPWeeklyResult> table = enhancedClient.table(tableName,
+                TableSchema.fromClass(FBPWeeklyResult.class));
 
         try {
             System.out.println("Querying weekly results for week: " + week);
@@ -74,15 +80,15 @@ public class GetWeeklyResultsSheet {
             DynamoDbIndex<FBPWeeklyResult> weekIndex = table.index(weekIndexName);
 
             QueryEnhancedRequest weekQuery = QueryEnhancedRequest.builder()
-                .queryConditional(QueryConditional.keyEqualTo(
-                    Key.builder().partitionValue(week.doubleValue()).build()))
-                .build();
+                    .queryConditional(QueryConditional.keyEqualTo(
+                            Key.builder().partitionValue(week.doubleValue()).build()))
+                    .build();
 
             List<FBPWeeklyResult> picksRows = weekIndex.query(weekQuery)
-                .stream()
-                .flatMap(page -> page.items().stream())
-                .sorted(Comparator.comparingInt(FBPWeeklyResult::getCorrectPicks).reversed())
-                .collect(Collectors.toList());
+                    .stream()
+                    .flatMap(page -> page.items().stream())
+                    .sorted(Comparator.comparingInt(FBPWeeklyResult::getCorrectPicks).reversed())
+                    .collect(Collectors.toList());
             // Set the winner field for top player.
             if (!picksRows.isEmpty()) {
                 picksRows.get(0).setWinner(true);
@@ -99,15 +105,21 @@ public class GetWeeklyResultsSheet {
             }
 
             System.out.println("Retrieved " + picksRows.size() + " items from DynamoDB for week " + week);
+            logEntry.setLevel("INFO");
+            logEntry.setDetails("Successfully retrieved weekly results for week: " + week);
+            FBPUtils.logAction(logEntry);
             return new APIGatewayProxyResponseEvent()
-                .withStatusCode(200)
-                .withHeaders(headers)
-                .withBody(toJson(picksRows));
+                    .withStatusCode(200)
+                    .withHeaders(headers)
+                    .withBody(toJson(picksRows));
         } catch (Exception e) {
+            logEntry.setLevel("ERROR");
+            logEntry.setDetails("Exception occurred: " + e.getMessage());
+            FBPUtils.logAction(logEntry);
             return new APIGatewayProxyResponseEvent()
-                .withStatusCode(500)
-                .withHeaders(headers)
-                .withBody(toJson(Map.of("error", e.getMessage())));
+                    .withStatusCode(500)
+                    .withHeaders(headers)
+                    .withBody(toJson(Map.of("error", e.getMessage())));
         }
     }
 }

@@ -69,6 +69,13 @@ public class CalcWeeklyResults {
                     .collect(Collectors.toList());
 
             if (scheduleRows == null || scheduleRows.isEmpty()) {
+                FBPLogAction logEntryFailure = new FBPLogAction();
+                logEntryFailure.setAction("CalcWeeklyResults");
+                logEntryFailure.setDetails("No schedule found for week " + week);
+                logEntryFailure.setLevel("ERROR");
+                logEntryFailure.setWeek(week.toString());
+                logEntryFailure.setEmail("fbpadmin@my-fbp.com");
+                FBPUtils.logAction(logEntryFailure);
                 return new APIGatewayProxyResponseEvent()
                         .withStatusCode(404)
                         .withHeaders(headers)
@@ -82,11 +89,25 @@ public class CalcWeeklyResults {
                 table.updateItem(updatedRow);
             }
 
+            FBPLogAction logEntry = new FBPLogAction();
+            logEntry.setAction("CalcWeeklyResults");
+            logEntry.setDetails("Results calculated for week " + week);
+            logEntry.setLevel("INFO");
+            logEntry.setWeek(week.toString());
+            logEntry.setEmail("fbpadmin@my-fbp.com");
+            FBPUtils.logAction(logEntry);
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(200)
                     .withHeaders(headers)
                     .withBody(new ObjectMapper().writeValueAsString(scheduleRows));
         } catch (Exception e) {
+            FBPLogAction logEntry = new FBPLogAction();
+            logEntry.setAction("CalcWeeklyResults");
+            logEntry.setEmail("fbpadmin@my-fbp.com");
+            logEntry.setLevel("ERROR");
+            logEntry.setDetails("Exception occurred: " + e.getMessage());
+            logEntry.setWeek(week.toString());
+            FBPUtils.logAction(logEntry);
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(500)
                     .withHeaders(headers)
@@ -101,23 +122,23 @@ public class CalcWeeklyResults {
         double spread = row.getSpread();
         String underDog = row.getUnderdog();
         String winner;
-        String HorA="";
+        String HorA = "";
         if (underDog.equals(row.getHomeTeam())) {
             if (homeScore + spread > awayScore) {
                 winner = row.getHomeTeam();
-                HorA="H";
+                HorA = "H";
             } else {
                 winner = row.getAwayTeam();
-                HorA="A";
+                HorA = "A";
             }
         } else {
             if (awayScore + spread > homeScore) {
                 winner = row.getAwayTeam();
-                HorA="A";
+                HorA = "A";
 
             } else {
                 winner = row.getHomeTeam();
-                HorA="H";
+                HorA = "H";
             }
         }
         System.out.println("Winner: " + winner);

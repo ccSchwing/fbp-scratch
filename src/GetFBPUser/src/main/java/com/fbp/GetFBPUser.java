@@ -16,6 +16,12 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 public class GetFBPUser {
     public APIGatewayProxyResponseEvent getFBPUser(APIGatewayProxyRequestEvent request) {
+        
+        FBPLogAction logEntry = new FBPLogAction();
+        logEntry.setAction("GetFBPUser");
+        Integer week= FBPUtils.getCurrentWeek();
+        logEntry.setWeek(week.toString());
+
         APIGatewayProxyResponseEvent response = new APIGatewayProxyResponseEvent();
         Map<String, String> headers = new HashMap<>();
         headers.put("Access-Control-Allow-Origin", "*");
@@ -43,6 +49,10 @@ public class GetFBPUser {
             }
 
             if (email == null || email.isEmpty()) {
+                logEntry.setLevel("ERROR");
+                logEntry.setDetails("Email is required in request body: " + request.getBody());
+                logEntry.setEmail("fbpadmin@my-fbp.com");
+                FBPUtils.logAction(logEntry);
                 response = new APIGatewayProxyResponseEvent();
                 response.setStatusCode(400);
                 response.setBody("{\"error\": \"Email is required in request body\"}");
@@ -60,6 +70,10 @@ public class GetFBPUser {
             String tableName = System.getenv("FBPUsersTableName");
             DynamoDbTable<FBPUser> table = enhancedClient.table(tableName, TableSchema.fromBean(FBPUser.class));
             FBPUser fbpUser = table.getItem(Key.builder().partitionValue(email).build());
+            logEntry.setLevel("INFO");
+            logEntry.setDetails("Fetched FBPUser for email: " + email);
+            logEntry.setEmail(email);
+            FBPUtils.logAction(logEntry);
             response = new APIGatewayProxyResponseEvent();
             response.setStatusCode(200);
             response.setBody(mapper.writeValueAsString(fbpUser));
@@ -67,6 +81,10 @@ public class GetFBPUser {
             return response;
 
         } catch (Exception e) {
+            logEntry.setLevel("ERROR");
+            logEntry.setDetails("Exception occurred: " + e.getMessage());
+            logEntry.setEmail("fbpadmin@my-fbp.com");
+            FBPUtils.logAction(logEntry);
             response = new APIGatewayProxyResponseEvent();
             response.setStatusCode(500);
             response.setBody("{\"error\": \"" + e.getMessage() + "\"}");

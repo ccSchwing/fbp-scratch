@@ -41,16 +41,37 @@ Parameters:
     Default: my-fbp.com
 
 Resources:
+  GetPoolOpenEvent:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/GetPoolOpen/src/
+      Handler: GetPoolOpenEvent.lambda_handler
+      Runtime: python3.14
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPConfigTableName
+      Environment:
+        Variables:
+          FBPConfigTableName: !Ref FBPConfigTableName
+      Events:
+        GetPoolOpen:
+          Type: Api
+          Properties:
+            Path: /getPoolOpen
+            Method: GET
   GetPreSignedUrl:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: com.fbp.getpresignedurl.GetPreSignedUrlHandler::handleRequest
+      Handler: com.fbp.GetPreSignedUrlHandler::handleRequest
       Runtime: java17
       CodeUri: src/GetPreSignedUrl/target/GetPreSignedUrl-1.0.jar
       Environment:
         Variables:
           S3_BUCKET_NAME: !Ref S3BucketName
+          FBPLogsTableName: !Ref FBPLogsTableName
       Policies:
+        - DynamoDBCrudPolicy:
+           TableName: !Ref FBPLogsTableName
         - S3ReadPolicy:
             BucketName: !Ref S3BucketName
       Events:
@@ -85,7 +106,7 @@ Resources:
             TableName: !Ref FBPUsersTableName
         - DynamoDBReadPolicy:
             TableName: !Ref FBPConfigTableName
-        - DynamoDBReadPolicy:
+        - DynamoDBCrudPolicy:
             TableName: !Ref FBPLogsTableName
       Environment:
         Variables:
@@ -138,10 +159,16 @@ Resources:
       # Remove Environment here since it's in Globals
       Policies:
         - DynamoDBReadPolicy:
+            TableName: !Ref FBPConfigTableName
+        - DynamoDBReadPolicy:
             TableName: !Ref FBPUsersTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPLogsTableName
       Environment:
         Variables:
           FBPUsersTableName: !Ref FBPUsersTableName
+          FBPLogsTableName: !Ref FBPLogsTableName
+          FBPConfigTableName: !Ref FBPConfigTableName
       Events:
         GetFBPUserPost:
           Type: Api
@@ -203,10 +230,13 @@ Resources:
             TableName: !Ref FBPScheduleTableName
         - DynamoDBReadPolicy:
             TableName: !Ref FBPConfigTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPLogsTableName
       Environment:
         Variables:
           FBPScheduleTableName: !Ref FBPScheduleTableName
           FBPConfigTableName: !Ref FBPConfigTableName
+          FBPLogsTableName: !Ref FBPLogsTableName
       Events:
         GetPickSheetPost:
           Type: Api
@@ -271,6 +301,8 @@ Resources:
             TableName: !Ref FBPConfigTableName
         - DynamoDBCrudPolicy:
             TableName: !Ref FBPUsersTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPLogsTableName
       Environment:
         Variables:
           FBPWeeklyResultsTableName: !Ref FBPWeeklyResultsTableName
@@ -279,6 +311,7 @@ Resources:
           FBPConfigTableName: !Ref FBPConfigTableName
           FBPUsersTableName: !Ref FBPUsersTableName
           FBPWeeklyResultsWeekIndexName: !Ref FBPWeeklyResultsWeekIndexName
+          FBPLogsTableName: !Ref FBPLogsTableName
       Events:
         CalcWeeklyResultsGet:
           Type: Api
@@ -302,6 +335,8 @@ Resources:
       # Remove Environment here since it's in Globals
       Policies:
         - DynamoDBCrudPolicy:
+            TableName: !Ref FBPLogsTableName
+        - DynamoDBCrudPolicy:
             TableName: !Ref FBPWeeklyResultsTableName
         - DynamoDBReadPolicy:
             TableName: !Ref FBPConfigTableName
@@ -312,6 +347,7 @@ Resources:
           FBPWeeklyResultsTableName: !Ref FBPWeeklyResultsTableName
           FBPWeeklyResultsWeekIndexName: !Ref FBPWeeklyResultsWeekIndexName
           FBPConfigTableName: !Ref FBPConfigTableName
+          FBPLogsTableName: !Ref FBPLogsTableName
           BUCKET_NAME: my-fbp.com
       Events:
         GetWeeklyResultsSheetGet:
@@ -338,7 +374,13 @@ Resources:
         Environment:
           Variables:
             BUCKET_NAME: my-fbp.com
+            FBPConfigTableName: !Ref FBPConfigTableName
+            FBPLogsTableName: !Ref FBPLogsTableName
         Policies:
+          - DynamoDBReadPolicy:
+              TableName: !Ref FBPConfigTableName
+          - DynamoDBCrudPolicy:
+              TableName: !Ref FBPLogsTableName
           - S3WritePolicy:
               BucketName: my-fbp.com
         Events:
@@ -432,6 +474,14 @@ Outputs:
       Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
       Export:
         Name: !Sub ${AWS::StackName}-ApiUrl
+    GetPoolOpenFunction:
+      Description: GetPoolOpen Lambda Function ARN
+      Value: !GetAtt GetPoolOpenEvent.Arn
+    GetPoolOpenApi:
+      Description: GetPoolOpen API Endpoint
+      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getPoolOpen
+      Export:
+        Name: !Sub ${AWS::StackName}-GetPoolOpenApi
     AddFBPUserFunction:
       Description: AddFBPUser Lambda Function ARN
       Value: !GetAtt AddFBPUser.Arn
