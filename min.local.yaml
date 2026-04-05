@@ -60,6 +60,44 @@ Resources:
             Path: /getPoolOpen
             Method: GET
 
+  GetPoolConfig:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/GetPoolOpen/src/
+      Handler: GetPoolConfig.lambda_handler
+      Runtime: python3.14
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPConfigTableName
+      Environment:
+        Variables:
+          FBPConfigTableName: !Ref FBPConfigTableName
+      Events:
+        GetPoolConfig:
+          Type: Api
+          Properties:
+            Path: /getPoolConfig
+            Method: GET
+
+  SetPoolOpen:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/SetPoolOpen/src/
+      Handler: SetPoolOpen.lambda_handler
+      Runtime: python3.14
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPConfigTableName
+      Environment:
+        Variables:
+          FBPConfigTableName: !Ref FBPConfigTableName
+      Events:
+        SetPoolOpen:
+          Type: Api
+          Properties:
+            Path: /setPoolOpen
+            Method: POST
+
   AddFBPUser:
     Type: AWS::Serverless::Function
     Properties:
@@ -81,11 +119,16 @@ Resources:
             TableName: !Ref FBPConfigTableName
         - DynamoDBReadPolicy:
             TableName: !Ref FBPLogsTableName
+        - Statement:
+            - Effect: Allow
+              Action: lambda:InvokeFunction
+              Resource: !GetAtt GetPoolConfig.Arn
       Environment:
         Variables:
           FBPUsersTableName: !Ref FBPUsersTableName
           FBPConfigTableName: !Ref FBPConfigTableName
           FBPLogsTableName: !Ref FBPLogsTableName
+          GET_POOL_CONFIG_FUNCTION: !Ref GetPoolConfig
   GetFBPPicks:
     Type: AWS::Serverless::Function
     Properties:
@@ -103,11 +146,16 @@ Resources:
             TableName: !Ref FBPConfigTableName
         - DynamoDBReadPolicy:
             TableName: !Ref FBPUsersTableName
+        - Statement:
+            - Effect: Allow
+              Action: lambda:InvokeFunction
+              Resource: !GetAtt GetPoolConfig.Arn
       Environment:
         Variables:
           FBPPicksTableName: !Ref FBPPicksTableName
           FBPConfigTableName: !Ref FBPConfigTableName
           FBPUsersTableName: !Ref FBPUsersTableName
+          GET_POOL_CONFIG_FUNCTION: !Ref GetPoolConfig
       Events:
         GetFBPUserPost:
           Type: Api
@@ -137,11 +185,16 @@ Resources:
             TableName: !Ref FBPConfigTableName
         - DynamoDBCrudPolicy:
             TableName: !Ref FBPLogsTableName
+        - Statement:
+            - Effect: Allow
+              Action: lambda:InvokeFunction
+              Resource: !GetAtt GetPoolConfig.Arn
       Environment:
         Variables:
           FBPUsersTableName: !Ref FBPUsersTableName
           FBPLogsTableName: !Ref FBPLogsTableName
           FBPConfigTableName: !Ref FBPConfigTableName
+          GET_POOL_CONFIG_FUNCTION: !Ref GetPoolConfig
       Events:
         GetFBPUserPost:
           Type: Api
@@ -170,12 +223,17 @@ Resources:
             TableName: !Ref FBPUsersTableName
         - DynamoDBReadPolicy:
             TableName: !Ref FBPConfigTableName
+        - Statement:
+            - Effect: Allow
+              Action: lambda:InvokeFunction
+              Resource: !GetAtt GetPoolConfig.Arn
       Environment:
         Variables:
           FBPPicksTableName: !Ref FBPPicksTableName
           FBPLogsTableName: !Ref FBPLogsTableName
           FBPUsersTableName: !Ref FBPUsersTableName
           FBPConfigTableName: !Ref FBPConfigTableName
+          GET_POOL_CONFIG_FUNCTION: !Ref GetPoolConfig
       Events:
         GetAllFBPPicks:
           Type: Api
@@ -204,11 +262,16 @@ Resources:
             TableName: !Ref FBPConfigTableName
         - DynamoDBCrudPolicy:
             TableName: !Ref FBPLogsTableName
+        - Statement:
+            - Effect: Allow
+              Action: lambda:InvokeFunction
+              Resource: !GetAtt GetPoolConfig.Arn
       Environment:
         Variables:
           FBPScheduleTableName: !Ref FBPScheduleTableName
           FBPConfigTableName: !Ref FBPConfigTableName
           FBPLogsTableName: !Ref FBPLogsTableName
+          GET_POOL_CONFIG_FUNCTION: !Ref GetPoolConfig
       Events:
         GetPickSheetPost:
           Type: Api
@@ -235,10 +298,15 @@ Resources:
             TableName: !Ref FBPScheduleTableName
         - DynamoDBReadPolicy:
             TableName: !Ref FBPConfigTableName
+        - Statement:
+            - Effect: Allow
+              Action: lambda:InvokeFunction
+              Resource: !GetAtt GetPoolConfig.Arn
       Environment:
         Variables:
           FBPScheduleTableName: !Ref FBPScheduleTableName
           FBPConfigTableName: !Ref FBPConfigTableName
+          GET_POOL_CONFIG_FUNCTION: !Ref GetPoolConfig
       Events:
         UpdateFinalScoresGet:
           Type: Api
@@ -273,6 +341,10 @@ Resources:
             TableName: !Ref FBPUsersTableName
         - DynamoDBCrudPolicy:
             TableName: !Ref FBPLogsTableName
+        - Statement:
+            - Effect: Allow
+              Action: lambda:InvokeFunction
+              Resource: !GetAtt GetPoolConfig.Arn
       Environment:
         Variables:
           FBPWeeklyResultsTableName: !Ref FBPWeeklyResultsTableName
@@ -282,6 +354,7 @@ Resources:
           FBPUsersTableName: !Ref FBPUsersTableName
           FBPLogsTableName: !Ref FBPLogsTableName
           FBPWeeklyResultsWeekIndexName: !Ref FBPWeeklyResultsWeekIndexName
+          GET_POOL_CONFIG_FUNCTION: !Ref GetPoolConfig
       Events:
         CalcWeeklyResultsGet:
           Type: Api
@@ -341,6 +414,10 @@ Resources:
             TableName: !Ref FBPUsersTableName
         - S3WritePolicy:
             BucketName: my-fbp.com
+        - Statement:
+            - Effect: Allow
+              Action: lambda:InvokeFunction
+              Resource: !GetAtt GetPoolConfig.Arn
       Environment:
         Variables:
           FBPWeeklyResultsTableName: !Ref FBPWeeklyResultsTableName
@@ -349,6 +426,7 @@ Resources:
           FBPUsersTableName: !Ref FBPUsersTableName
           FBPLogsTableName: !Ref FBPLogsTableName
           BUCKET_NAME: my-fbp.com
+          GET_POOL_CONFIG_FUNCTION: !Ref GetPoolConfig
       Events:
         GetWeeklyResultsSheetGet:
           Type: Api
@@ -376,6 +454,7 @@ Resources:
             BUCKET_NAME: my-fbp.com
             FBPConfigTableName: !Ref FBPConfigTableName
             FBPLogsTableName: !Ref FBPLogsTableName
+            GET_POOL_CONFIG_FUNCTION: !Ref GetPoolConfig
         Policies:
           - DynamoDBReadPolicy:
               TableName: !Ref FBPConfigTableName
@@ -383,6 +462,10 @@ Resources:
               TableName: !Ref FBPLogsTableName
           - S3WritePolicy:
               BucketName: my-fbp.com
+          - Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: !GetAtt GetPoolConfig.Arn
         Events:
           SaveContentPost:
             Type: Api
@@ -448,12 +531,17 @@ Resources:
             TableName: !Ref FBPUsersTableName
         - DynamoDBReadPolicy:
             TableName: !Ref FBPConfigTableName
+        - Statement:
+            - Effect: Allow
+              Action: lambda:InvokeFunction
+              Resource: !GetAtt GetPoolConfig.Arn
       Environment:
         Variables:
           FBPPicksTableName: !Ref FBPPicksTableName
           FBPLogsTableName: !Ref FBPLogsTableName
           FBPUsersTableName: !Ref FBPUsersTableName
           FBPConfigTableName: !Ref FBPConfigTableName
+          GET_POOL_CONFIG_FUNCTION: !Ref GetPoolConfig
       Events:
         SaveFBPPicks:
           Type: Api
@@ -472,6 +560,14 @@ Outputs:
       Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
       Export:
         Name: !Sub ${AWS::StackName}-ApiUrl
+    GetPoolConfigFunction:
+      Description: GetPoolConfig Lambda Function ARN
+      Value: !GetAtt GetPoolConfig.Arn
+    GetPoolConfigApi:
+      Description: GetPoolConfig API Endpoint
+      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getPoolConfig
+      Export:
+        Name: !Sub ${AWS::StackName}-GetPoolConfigApi
     GetPoolOpenFunction:
       Description: GetPoolOpen Lambda Function ARN
       Value: !GetAtt GetPoolOpenEvent.Arn

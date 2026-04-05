@@ -1,0 +1,6 @@
+JsonNode config = FBPUtils.getPoolConfig();
+boolean poolOpen = config.get("poolOpen").asBoolean();
+int week = config.get("week").asInt();
+
+This example shows how to call the python GetPoolConfig lambda and return the week
+to the caller.
