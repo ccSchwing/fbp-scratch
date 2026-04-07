@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
@@ -38,7 +39,10 @@ public class GetAllFBPPicks {
         try {
             logEntry.setAction("GetAllFBPPicks");
             logEntry.setEmail("fbpadmin@my-fbp.com");
-            Integer week = FBPUtils.getCurrentWeek();
+            JsonNode poolConfig = FBPUtils.getPoolConfig();
+            Integer week = (poolConfig != null && poolConfig.has("week") && !poolConfig.get("week").isNull())
+                    ? poolConfig.get("week").asInt()
+                    : null;
             if (week == null) {
                 logEntry.setLevel("ERROR");
                 logEntry.setDetails("Could not determine current week");

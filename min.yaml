@@ -95,6 +95,24 @@ Resources:
           Properties:
             Path: /setPoolOpen
             Method: POST
+  GetFBPUserPython:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/GetFBPUser-Python/src/
+      Handler: GetFBPUser.lambda_handler
+      Runtime: python3.14
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPUsersTableName
+      Environment:
+        Variables:
+          FBPUsersTableName: !Ref FBPUsersTableName
+      Events:
+        GetFBPUserPython:
+          Type: Api
+          Properties:
+            Path: /getFBPUserPython
+            Method: POST
 
   GetPreSignedUrl:
     Type: AWS::Serverless::Function
@@ -585,6 +603,14 @@ Outputs:
       Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/setPoolOpen
       Export:
         Name: !Sub ${AWS::StackName}-SetPoolOpenApi
+    GetFBPUserPythonFunction:
+      Description: GetFBPUserPython Lambda Function ARN
+      Value: !GetAtt GetFBPUserPython.Arn
+    GetFBPUserPythonApi:
+      Description: GetFBPUserPython API Endpoint
+      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getFBPUserPython
+      Export:
+        Name: !Sub ${AWS::StackName}-GetFBPUserPythonApi
     AddFBPUserFunction:
       Description: AddFBPUser Lambda Function ARN
       Value: !GetAtt AddFBPUser.Arn

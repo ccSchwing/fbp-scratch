@@ -243,6 +243,7 @@ public class FBPUtils {
             String responseJson = response.payload().asUtf8String();
             ObjectMapper mapper = new ObjectMapper();
             JsonNode root = mapper.readTree(responseJson);
+            System.out.println("getPoolConfig Python- Lambda response: " + root.toString());
             return mapper.readTree(root.get("body").asText());
         } catch (Exception e) {
             System.err.println("EXCEPTION in getPoolConfig(): " + e.getMessage());

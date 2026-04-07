@@ -108,4 +108,13 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["GetPreSignedUrl"]
 
+[function_build_definitions.4a254660-0816-4c16-a80f-a1d75f706288]
+codeuri = "/Users/ccs/projects/fbp-lambda/src/SetPoolOpen/src"
+runtime = "python3.14"
+architecture = "x86_64"
+handler = "SetPoolOpen.lambda_handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["SetPoolOpen"]
+
 [layer_build_definitions]

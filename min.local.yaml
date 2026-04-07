@@ -206,6 +206,44 @@ Resources:
           Properties:
             Path: /getFBPUser
             Method: OPTIONS
+  GetPoolConfig:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/GetPoolOpen/src/
+      Handler: GetPoolConfig.lambda_handler
+      Runtime: python3.14
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPConfigTableName
+      Environment:
+        Variables:
+          FBPConfigTableName: !Ref FBPConfigTableName
+      Events:
+        GetPoolConfig:
+          Type: Api
+          Properties:
+            Path: /getPoolConfig
+            Method: GET
+
+  GetFBPUserPython:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/GetFBPUser-Python/src/
+      Handler: GetFBPUser.lambda_handler
+      Runtime: python3.14
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPUsersTableName
+      Environment:
+        Variables:
+          FBPUsersTableName: !Ref FBPUsersTableName
+      Events:
+        GetFBPUserPython:
+          Type: Api
+          Properties:
+            Path: /getFBPUserPython
+            Method: POST
+
   GetAllFBPPicks:
     Type: AWS::Serverless::Function
     Properties:
@@ -576,6 +614,14 @@ Outputs:
       Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getPoolOpen
       Export:
         Name: !Sub ${AWS::StackName}-GetPoolOpenApi
+    GetFBPUserPythonFunction:
+      Description: GetFBPUserPython Lambda Function ARN
+      Value: !GetAtt GetFBPUserPython.Arn
+    GetFBPUserPythonApi:
+      Description: GetFBPUserPython API Endpoint
+      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getFBPUserPython
+      Export:
+        Name: !Sub ${AWS::StackName}-GetFBPUserPythonApi
     AddFBPUserFunction:
       Description: AddFBPUser Lambda Function ARN
       Value: !GetAtt AddFBPUser.Arn
