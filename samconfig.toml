@@ -1,5 +1,8 @@
 version = 0.1
 
+[default.build.parameters]
+template_file = "min.yaml"
+
 [default.deploy.parameters]
 stack_name = "fbp-lambda"
 resolve_s3 = true

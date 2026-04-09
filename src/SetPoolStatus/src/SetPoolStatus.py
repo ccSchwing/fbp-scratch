@@ -1,6 +1,13 @@
 import json
 import boto3
+import logging
+import os
 from botocore.exceptions import ClientError
+from aws_lambda_powertools.utilities.data_classes import APIGatewayProxyEvent
+
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
     """
@@ -15,15 +22,29 @@ def lambda_handler(event, context):
         week_number = None
         poolOpen = None
 
-        if(event.get('queryStringParameters') and event['queryStringParameters'].get('week') is not None):
-            week_number = event['queryStringParameters'].get('week')
-        elif 'week' in event and event.get('week') is not None:
-            week_number = event.get('week')
+        apigw_event = APIGatewayProxyEvent(event)
+        logger.info(f"Received API Gateway event body: {apigw_event.body}")
+        body = apigw_event.json_body
+        if body is None:
+            raw_body = event.get('body') if isinstance(event, dict) else None
+            if isinstance(raw_body, str) and raw_body:
+                body = json.loads(raw_body)
+            elif isinstance(raw_body, dict):
+                body = raw_body
+            elif isinstance(event, dict):
+                body = event
+            else:
+                body = {}
+        logger.info(f"Parsed JSON body: {body}")
+        week_number = body.get('week')
+        poolOpen = body.get('poolOpen')
+        logger.info(f"Extracted week_number: {week_number}, poolOpen: {poolOpen} from API Gateway event")
 
-        if(event.get('queryStringParameters') and event['queryStringParameters'].get('poolOpen') is not None):
-            poolOpen = event['queryStringParameters'].get('poolOpen')
-        elif 'poolOpen' in event and event.get('poolOpen') is not None:
-            poolOpen = event.get('poolOpen')
+        if isinstance(week_number, str) and week_number.strip():
+            week_number = int(week_number)
+
+
+
     
         if week_number is None:
             return {
@@ -38,45 +59,29 @@ def lambda_handler(event, context):
             'statusCode': 400,
             'body': json.dumps({
                 'error': 'poolOpen value is required',
-                'message': 'Please provide poolOpen value (true or false)in the event'
+                'message': 'Please provide poolOpen value (true or false) in the POST event'
             })
         }
 
-        if isinstance(poolOpen, str):
-            lowered = poolOpen.strip().lower()
-            if lowered == 'true':
-                poolOpen = True
-            elif lowered == 'false':
-                poolOpen = False
-            else:
-                return {
-                    'statusCode': 400,
-                    'body': json.dumps({
-                        'error': 'Invalid poolOpen value',
-                        'message': 'poolOpen must be true or false'
-                    })
-                }
-        elif not isinstance(poolOpen, bool):
+        # Get PoolOpen and week frm FBP-Config table for the specified week number
+        response = table.get_item(
+            Key={
+                'Week': week_number
+            }
+        )
+        if 'Item' not in response:
             return {
-                'statusCode': 400,
+                'statusCode': 404,
                 'body': json.dumps({
-                    'error': 'Invalid poolOpen value',
-                    'message': 'poolOpen must be a boolean'
+                    'error': f'Configuration for week {week_number} not found',
+                    'week': week_number
                 })
             }
+        current_week = response['Item'].get('Week', week_number)
+        logger.info(f"Fetched configuration for week {current_week} from DynamoDB: {json.dumps(response['Item'], default=str)}")
+        current_poolOpen = response['Item'].get('poolOpen', False)
+        logger.info(f"Current poolOpen value for week {week_number} is: {current_poolOpen}")
 
-        # Convert to integer if it's a string
-        try:
-            week_number = int(week_number)
-        except (ValueError, TypeError):
-            return {
-                'statusCode': 400,
-                'body': json.dumps({
-                    'error': 'Invalid week number',
-                    'message': 'Week must be a valid number'
-                })
-            }
-        
         # Update DynamoDB table with the new poolOpen value for the specified week
 
         table.update_item(
@@ -94,11 +99,11 @@ def lambda_handler(event, context):
                 'Week': week_number
             }
         )
-        
+        logger.info(f"Updated poolOpen value for week {week_number} to: {poolOpen}")
         # Check if item exists and return poolOpen value
         if 'Item' in response:
             poolOpen = response['Item'].get('poolOpen', False)
-            
+            logger.info(f"Returning updated poolOpen value for week {week_number}: {poolOpen}")
             return {
                 'statusCode': 200,
                 'body': json.dumps({

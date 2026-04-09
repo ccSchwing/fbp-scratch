@@ -4,6 +4,7 @@ import boto3
 import logging
 from botocore.exceptions import ClientError
 from aws_lambda_powertools.utilities.data_classes import APIGatewayProxyEvent
+from FBPLib.fbpLog import fbpLog
 
 
 '''
@@ -14,7 +15,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 USERS_TABLE_NAME = os.environ.get('FBPUsersTableName', 'FBP-Users')
-
+fbpLog("fbpadmin@my-fbp.com", "GetFBPUser", "Lambda function initialized", "INFO")
 def lambda_handler(event, context):
 
     try:
@@ -83,10 +84,13 @@ def get_fbp_user(emailAddress):
             Key={'email': emailAddress}
         )
         item = response['Item'] if 'Item' in response else None
+        logger.info(f"Fetched user from DynamoDB: {json.dumps(item, default=str) if item else 'None'}")
         return item
     except ClientError as e:
         logger.error(f"DynamoDB Error: {e}")
+        fbpLog("fbpadmin@my-fbp.com", "GetFBPUser", f"DynamoDB Error: {e}", "ERROR")
         return None
     except Exception as e:
+        fbpLog("fbpadmin@my-fbp.com", "GetFBPUser", f"Unexpected error: {e}", "ERROR")
         logger.error(f"Unexpected error: {e}")
         return None

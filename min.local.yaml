@@ -41,6 +41,17 @@ Parameters:
     Default: my-fbp.com
 
 Resources:
+  FBPLibLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: FBPLib
+      Description: Shared FBP Python utility library
+      ContentUri: src/FBPLib-Layer/
+      CompatibleRuntimes:
+        - python3.14
+    Metadata:
+      BuildMethod: python3.14
+
   GetPoolOpenEvent:
     Type: AWS::Serverless::Function
     Properties:
@@ -97,11 +108,11 @@ Resources:
             Path: /getPoolConfig
             Method: GET
 
-  SetPoolOpen:
+  SetPoolStatus:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/SetPoolOpen/src/
-      Handler: SetPoolOpen.lambda_handler
+      CodeUri: src/SetPoolStatus/src/
+      Handler: SetPoolStatus.lambda_handler
       Runtime: python3.14
       Policies:
         - DynamoDBCrudPolicy:
@@ -110,10 +121,10 @@ Resources:
         Variables:
           FBPConfigTableName: !Ref FBPConfigTableName
       Events:
-        SetPoolOpen:
+        SetPoolStatus:
           Type: Api
           Properties:
-            Path: /setPoolOpen
+            Path: /setPoolStatus
             Method: POST
 
   AddFBPUser:
@@ -249,12 +260,21 @@ Resources:
       CodeUri: src/GetFBPUser-Python/src/
       Handler: GetFBPUser.lambda_handler
       Runtime: python3.14
+      Layers:
+        - !Ref FBPLibLayer
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref FBPUsersTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPConfigTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPLogsTableName
       Environment:
         Variables:
           FBPUsersTableName: !Ref FBPUsersTableName
+          FBPLogsTableName: !Ref FBPLogsTableName
+          FBPConfigTableName: !Ref FBPConfigTableName
+
       Events:
         GetFBPUserPython:
           Type: Api
@@ -301,6 +321,48 @@ Resources:
           Properties:
             Path: /getAllFBPPicks
             Method: OPTIONS
+  GetAllFBPPicksPython:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/GetAllFBPPicksPython/src/
+      Handler: GetAllFBPPicks.lambda_handler
+      Runtime: python3.14
+      Architectures:
+        - x86_64
+      Layers:
+        - !Ref FBPLibLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPPicksTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPLogsTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPUsersTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPConfigTableName
+        - Statement:
+            - Effect: Allow
+              Action: lambda:InvokeFunction
+              Resource: !GetAtt GetPoolConfig.Arn
+      Environment:
+        Variables:
+          FBPPicksTableName: !Ref FBPPicksTableName
+          FBPLogsTableName: !Ref FBPLogsTableName
+          FBPUsersTableName: !Ref FBPUsersTableName
+          FBPConfigTableName: !Ref FBPConfigTableName
+          GET_POOL_CONFIG_FUNCTION: !Ref GetPoolConfig
+      Events:
+        GetAllFBPPicksPython:
+          Type: Api
+          Properties:
+            Path: /getAllFBPPicks
+            Method: GET
+        GetAllFBPPicksPythonOptions:
+          Type: Api
+          Properties:
+            Path: /getAllFBPPicksPython
+            Method: OPTIONS
+
   GetPickSheet:
     Type: AWS::Serverless::Function
     Properties:
@@ -624,6 +686,14 @@ Outputs:
       Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getFBPPicksPython
       Export:
         Name: !Sub ${AWS::StackName}-GetFBPPicksPythonApi
+    SetPoolStatusFunction:
+      Description: SetPoolStatus Lambda Function ARN
+      Value: !GetAtt SetPoolStatus.Arn
+    SetPoolStatusApi:
+      Description: SetPoolStatus API Endpoint
+      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/setPoolStatus
+      Export:
+        Name: !Sub ${AWS::StackName}-SetPoolStatusApi
     GetPoolConfigFunction:
       Description: GetPoolConfig Lambda Function ARN
       Value: !GetAtt GetPoolConfig.Arn

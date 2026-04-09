@@ -1,0 +1,9 @@
+{
+  "httpMethod": "POST",
+  "path": "/setPoolStatus",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{\"week\": 1, \"poolOpen\": false}",
+  "isBase64Encoded": false
+}

@@ -1,11 +1,9 @@
 {
   "httpMethod": "GET",
-  "path": "/debug",
+  "path": "/getAllFBPPicksPython",
   "headers": {
     "Content-Type": "application/json"
   },
-  "queryStringParameters": {
-    "email": "chuckschwing@proton.me"
-  },
+  "queryStringParameters": null,
   "isBase64Encoded": false
 }

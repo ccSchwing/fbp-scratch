@@ -1,1 +1,9 @@
-{}
+{
+	"httpMethod": "GET",
+	"path": "/getPoolConfig",
+	"headers": {
+		"Content-Type": "application/json"
+	},
+	"queryStringParameters": null,
+	"isBase64Encoded": false
+}
