@@ -4,6 +4,9 @@ Globals:
   Function:
     Timeout: 30
     MemorySize: 512
+    Environment:
+      Variables:
+        POWERTOOLS_SERVICE_NAME: FBPService
   Api:
     Cors:
       AllowMethods: '''GET,POST,OPTIONS'''
@@ -106,6 +109,30 @@ Resources:
           Properties:
             Path: /setPoolStatus
             Method: POST
+
+  # HTTP API with CORS
+  MyHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: prod
+      CorsConfiguration:
+        AllowOrigins:
+          - "*"  # Change to your domain in production
+        AllowHeaders:
+          - Content-Type
+          - X-Amz-Date
+          - Authorization
+          - X-Api-Key
+          - X-Amz-Security-Token
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        MaxAge: 300
+        AllowCredentials: false
+
   GetFBPUserPython:
     Type: AWS::Serverless::Function
     Properties:
@@ -126,10 +153,12 @@ Resources:
           FBPConfigTableName: !Ref FBPConfigTableName
       Events:
         GetFBPUserPython:
-          Type: Api
+          Type: HttpApi
           Properties:
+            ApiId: !Ref MyHttpApi
             Path: /getFBPUserPython
             Method: POST
+            PayloadFormatVersion: "2.0"
       Layers:
         - !Ref FBPLibLayer
   GetFBPPicksPython:
@@ -652,6 +681,16 @@ Resources:
             Method: OPTIONS
 
 Outputs:
+    HttpAPiUrl:
+      Description: URL of the HTTP API gateway
+      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
+      Export:
+        Name: !Sub ${AWS::StackName}-HttpApiUrl
+    HttpApiId:
+      Description: HTTP API ID
+      Value: !Ref MyHttpApi
+      Export:
+        Name: !Sub ${AWS::StackName}-HttpApiId
     ApiUrl:
       Description: URL of the API gateway
       Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
@@ -697,9 +736,15 @@ Outputs:
       Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/setPoolStatus
       Export:
         Name: !Sub ${AWS::StackName}-SetPoolStatusApi
-    GetFBPUserPythonFunction:
-      Description: GetFBPUserPython Lambda Function ARN
-      Value: !GetAtt GetFBPUserPython.Arn
+    # THe entry belpw can be deleted after testing the HttpApi endpoint.
+    # GetFBPUserPythonFunction:
+      # Description: GetFBPUserPython Lambda Function ARN
+      # Value: !GetAtt GetFBPUserPython.Arn
+    GetFBPUserPythonEndpoint:
+       Description: GetFBPUserPython API Endpoint
+       Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getFBPUserPython
+       Export:
+         Name: !Sub ${AWS::StackName}-GetFBPUserPythonHttpApi
     GetFBPUserPythonApi:
       Description: GetFBPUserPython API Endpoint
       Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getFBPUserPython
