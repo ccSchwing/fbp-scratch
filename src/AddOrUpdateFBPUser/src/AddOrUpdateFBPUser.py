@@ -42,6 +42,7 @@ def updateFBPUser():
         email = request_body.get('email') if request_body else None
         if not email:
             logger.warning("Email field is missing in the request body")
+            fbpLog("fbpadmin@my-fbp.com", "AddOrUpdateFBPUser", "Email field is missing in the request body", "ERROR")
             return {
                 'statusCode': 400,
                 'body': json.dumps({
@@ -53,6 +54,7 @@ def updateFBPUser():
         logger.info(f"Request body: {request_body}")
         if not request_body:
             logger.error("No JSON body found in the request")
+            fbpLog("fbpadmin@my-fbp.com", "AddOrUpdateFBPUser", "No JSON body found in the request", "ERROR")
             return {
                 'statusCode': 400,
                 'body': json.dumps({
@@ -63,6 +65,7 @@ def updateFBPUser():
 
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
+        fbpLog("fbpadmin@my-fbp.com", "AddOrUpdateFBPUser", f"Unexpected error: {e}", "ERROR")
         return {
             'statusCode': 400,
             'body': json.dumps({
@@ -74,6 +77,7 @@ def updateFBPUser():
     item = updateFBPUserData(request_body)
     
     if item:
+        fbpLog("fbpadmin@my-fbp.com", "AddOrUpdateFBPUser", f"Updated user data for email: {email}: request_body: {json.dumps(request_body, default=str)}", "INFO")
         return {
             'statusCode': 200,
             'body': json.dumps({
@@ -92,13 +96,12 @@ def updateFBPUser():
             }
     else:
         logger.info(f"User not found: {email}")
+        fbpLog("fbpadmin@my-fbp.com", "AddOrUpdateFBPUser", f"User not found: {email}", "ERROR")
         return {
             'statusCode': 404,
             'body': json.dumps({
                 'error': f'User with email {email} not found',
                 'email': email,
-                'name': None,
-                'team': None
                 })
             } 
 
@@ -136,8 +139,6 @@ def updateFBPUserData(request_body):
                 ':isPaidUser': bool(request_body.get('isPaidUser'))
             },
         )
-        logger.info(f"Update user from DynamoDB: request_body: {json.dumps(request_body, default=str)}")
-        logger.info(f"Update user from DynamoDB: response: {json.dumps(response, default=str)}")
         return response
     except ClientError as e:
         logger.error(f"DynamoDB Error: {e}")

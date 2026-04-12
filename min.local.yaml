@@ -52,6 +52,75 @@ Resources:
     Metadata:
       BuildMethod: python3.14
 
+  # HTTP API with CORS
+  MyHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: prod
+      CorsConfiguration:
+        AllowOrigins:
+          - "*"  # Change to your domain in production
+        AllowHeaders:
+          - Content-Type
+          - X-Amz-Date
+          - Authorization
+          - X-Api-Key
+          - X-Amz-Security-Token
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        MaxAge: 300
+        AllowCredentials: false
+
+  GetAllFBPPicksPython:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/GetAllFBPPicksPython/src/
+      Handler: GetAllFBPPicks.lambda_handler
+      Runtime: python3.14
+      Architectures:
+        - x86_64
+      Layers:
+        - !Ref FBPLibLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPPicksTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPLogsTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPUsersTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPConfigTableName
+        - Statement:
+            - Effect: Allow
+              Action: lambda:InvokeFunction
+              Resource: !GetAtt GetPoolConfig.Arn
+      Environment:
+        Variables:
+          FBPPicksTableName: !Ref FBPPicksTableName
+          FBPLogsTableName: !Ref FBPLogsTableName
+          FBPUsersTableName: !Ref FBPUsersTableName
+          FBPConfigTableName: !Ref FBPConfigTableName
+          GET_POOL_CONFIG_FUNCTION: !Ref GetPoolConfig
+      Events:
+        GetAllFBPPicksPython:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MyHttpApi
+            Path: /getAllFBPPicksPython
+            Method: GET
+            PayloadFormatVersion: "2.0"
+        GetAllFBPPicksPythonOptions:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MyHttpApi
+            Path: /getAllFBPPicksPython
+            Method: OPTIONS
+ 
+
   GetPoolOpenEvent:
     Type: AWS::Serverless::Function
     Properties:
@@ -678,6 +747,21 @@ Outputs:
       Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
       Export:
         Name: !Sub ${AWS::StackName}-ApiUrl
+    HttpApiUrl:
+      Description: URL of the HTTP API gateway
+      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
+      Export:
+        Name: !Sub ${AWS::StackName}-HttpApiUrl
+    HttpApiId:
+      Description: HTTP API ID
+      Value: !Ref MyHttpApi
+      Export:
+        Name: !Sub ${AWS::StackName}-HttpApiId
+    GetAllFBPPicksPythonEndpoint:
+        Description: GetAllFBPPicksPython API Endpoint
+        Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getAllFBPPicksPython
+        Export:
+          Name: !Sub ${AWS::StackName}-GetAllFBPPicksPythonEndpoint
     GetFBPPicksPythonFunction:
       Description: GetFBPPicksPython Lambda Function ARN
       Value: !GetAtt GetFBPPicksPython.Arn

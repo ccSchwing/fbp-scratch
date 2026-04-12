@@ -200,9 +200,12 @@ Resources:
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref FBPPicksTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPLogsTableName
       Environment:
         Variables:
           FBPPicksTableName: !Ref FBPPicksTableName
+          FBPLogsTableName: !Ref FBPLogsTableName
       Events:
         GetFBPPicksPython:
           Type: Api
@@ -417,14 +420,17 @@ Resources:
           GET_POOL_CONFIG_FUNCTION: !Ref GetPoolConfig
       Events:
         GetAllFBPPicksPython:
-          Type: Api
+          Type: HttpApi
           Properties:
-            Path: /getAllFBPPicksPython
+            ApiId: !Ref MyHttpApi
+            Path: /getAllFBPPicks
             Method: GET
+            PayloadFormatVersion: "2.0"
         GetAllFBPPicksPythonOptions:
-          Type: Api
+          Type: HttpApi
           Properties:
-            Path: /getAllFBPPicksPython
+            ApiId: !Ref MyHttpApi
+            Path: /getAllFBPPicks
             Method: OPTIONS
 
   GetPickSheet:
@@ -726,14 +732,6 @@ Outputs:
       Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
       Export:
         Name: !Sub ${AWS::StackName}-ApiUrl
-    GetAllFBPPicksPythonFunction:
-      Description: GetAllFBPPicksPython Lambda Function ARN
-      Value: !GetAtt GetAllFBPPicksPython.Arn
-    GetAllFBPPicksPythonApi:
-      Description: GetAllFBPPicksPython API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getAllFBPPicksPython
-      Export:
-        Name: !Sub ${AWS::StackName}-GetAllFBPPicksPythonApi
     GetFBPPicksPythonFunction:
       Description: GetFBPPicksPython Lambda Function ARN
       Value: !GetAtt GetFBPPicksPython.Arn
@@ -780,6 +778,12 @@ Outputs:
       # Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getFBPUserPython
       # Export:
         # Name: !Sub ${AWS::StackName}-GetFBPUserPythonApi
+    GetAllFBPPicksPythonEndpoint:
+      Description: GetAllFBPPicksPython API Endpoint
+      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getAllFBPPicksPython
+      Export:
+        Name: !Sub ${AWS::StackName}-GetAllFBPPicksPythonHttpApi
+  
     UpdateFBPUserPythonEndpoint:
       Description: AddOrUpdateFBPUserPython API Endpoint
       Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/addOrUpdateFBPUserPython
