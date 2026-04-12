@@ -162,7 +162,7 @@ Resources:
       Layers:
         - !Ref FBPLibLayer
         
-  AddOrUpdateFBPUserPython:
+  UpdateFBPUserPython:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/AddOrUpdateFBPUser/src/
@@ -181,7 +181,7 @@ Resources:
           FBPLogsTableName: !Ref FBPLogsTableName
           FBPConfigTableName: !Ref FBPConfigTableName
       Events:
-        AddOrUpdateFBPUserPython:
+        UpdateFBPUserPython:
           Type: HttpApi
           Properties:
             ApiId: !Ref MyHttpApi
@@ -190,6 +190,38 @@ Resources:
             PayloadFormatVersion: "2.0"
       Layers:
         - !Ref FBPLibLayer
+
+
+  AddFBPUserPython:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/AddOrUpdateFBPUser/src/
+      Handler: AddOrUpdateFBPUser.lambda_handler
+      Runtime: python3.14
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPUsersTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPConfigTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPLogsTableName
+      Environment:
+        Variables:
+          FBPUsersTableName: !Ref FBPUsersTableName
+          FBPLogsTableName: !Ref FBPLogsTableName
+          FBPConfigTableName: !Ref FBPConfigTableName
+      Events:
+        AddFBPUserPython:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MyHttpApi
+            Path: /addFBPUser
+            Method: POST
+            PayloadFormatVersion: "2.0"
+      Layers:
+        - !Ref FBPLibLayer  
+
+
 
   GetFBPPicksPython:
     Type: AWS::Serverless::Function
@@ -780,15 +812,20 @@ Outputs:
         # Name: !Sub ${AWS::StackName}-GetFBPUserPythonApi
     GetAllFBPPicksPythonEndpoint:
       Description: GetAllFBPPicksPython API Endpoint
-      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getAllFBPPicksPython
+      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod/getAllFBPPicks
       Export:
         Name: !Sub ${AWS::StackName}-GetAllFBPPicksPythonHttpApi
   
     UpdateFBPUserPythonEndpoint:
-      Description: AddOrUpdateFBPUserPython API Endpoint
-      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/addOrUpdateFBPUserPython
+      Description: UpdateFBPUserPython API Endpoint
+      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/updateFBPUser
       Export:
         Name: !Sub ${AWS::StackName}-AddOrUpdateFBPUserPythonHttpApi
+    AddFBPUserPythonEndpoint:
+      Description: AddFBPUserPython API Endpoint
+      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod/addFBPUser
+      Export:
+        Name: !Sub ${AWS::StackName}-AddFBPUserPythonHttpApi
     AddFBPUserFunction:
       Description: AddFBPUser Lambda Function ARN
       Value: !GetAtt AddFBPUser.Arn
