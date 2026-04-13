@@ -75,6 +75,66 @@ Resources:
         MaxAge: 300
         AllowCredentials: false
 
+  SetPoolStatusOpen:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/SetPoolStatus/src/
+      Handler: SetPoolStatus.lambda_handler
+      Runtime: python3.14
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPConfigTableName
+      Environment:
+        Variables:
+          FBPConfigTableName: !Ref FBPConfigTableName
+      Layers: 
+        - !Ref FBPLibLayer
+      Events:
+        SetPoolStatusOpenPOST:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MyHttpApi
+            Path: /setPoolStatusOpen
+            Method: POST
+            PayloadFormatVersion: "2.0"
+        SetPoolStatusOpenOptions:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MyHttpApi
+            Path: /setPoolStatusOpen
+            Method: OPTIONS
+            PayloadFormatVersion: "2.0"
+
+  SetPoolStatusClosed:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/SetPoolStatus/src/
+      Handler: SetPoolStatus.lambda_handler
+      Runtime: python3.14
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPConfigTableName
+      Environment:
+        Variables:
+          FBPConfigTableName: !Ref FBPConfigTableName
+      Layers: 
+        - !Ref FBPLibLayer
+      Events:
+        SetPoolStatusClosedPOST:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MyHttpApi
+            Path: /setPoolStatusClosed
+            Method: POST
+            PayloadFormatVersion: "2.0"
+        SetPoolStatusClosedOptions:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MyHttpApi
+            Path: /setPoolStatusClosed
+            Method: OPTIONS
+            PayloadFormatVersion: "2.0"
+
   UpdateFBPUserPython:
     Type: AWS::Serverless::Function
     Properties:
@@ -235,25 +295,6 @@ Resources:
           Properties:
             Path: /getPoolConfig
             Method: GET
-
-  SetPoolStatus:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/SetPoolStatus/src/
-      Handler: SetPoolStatus.lambda_handler
-      Runtime: python3.14
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref FBPConfigTableName
-      Environment:
-        Variables:
-          FBPConfigTableName: !Ref FBPConfigTableName
-      Events:
-        SetPoolStatus:
-          Type: Api
-          Properties:
-            Path: /setPoolStatus
-            Method: POST
 
   AddFBPUser:
     Type: AWS::Serverless::Function
@@ -757,12 +798,28 @@ Outputs:
       Value: !Ref MyHttpApi
       Export:
         Name: !Sub ${AWS::StackName}-HttpApiId
+    SetPoolStatusOpenFunction:
+      Description: SetPoolStatus Lambda Function ARN
+      Value: !GetAtt SetPoolStatusOpen.Arn
+    SetPoolStatusOpenEndpoint:
+      Description: SetPoolStatus API Endpoint
+      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/setPoolStatusOpen
+      Export:
+        Name: !Sub ${AWS::StackName}-SetPoolStatusEndpoint
+    SetPoolStatusClosedFunction:
+      Description: SetPoolStatus Lambda Function ARN
+      Value: !GetAtt SetPoolStatusClosed.Arn
+    SetPoolStatusClosedEndpoint:
+      Description: SetPoolStatus API Endpoint
+      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/setPoolStatusClosed
+      Export:
+        Name: !Sub ${AWS::StackName}-SetPoolStatusClosedEndpoint
     AddFBPUserPythonFunction:
       Description: AddFBPUserPython Lambda Function ARN
       Value: !GetAtt AddFBPUserPython.Arn
     AddFBPUserPythonEndpoint:
       Description: AddFBPUserPython API Endpoint
-      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod/addFBPUser
+      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/addFBPUser
       Export:
         Name: !Sub ${AWS::StackName}-AddFBPUserPythonEndpoint
     GetAllFBPPicksPythonEndpoint:
@@ -778,14 +835,6 @@ Outputs:
       Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getFBPPicks
       Export:
         Name: !Sub ${AWS::StackName}-GetFBPPicksPythonApi
-    SetPoolStatusFunction:
-      Description: SetPoolStatus Lambda Function ARN
-      Value: !GetAtt SetPoolStatus.Arn
-    SetPoolStatusApi:
-      Description: SetPoolStatus API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/setPoolStatus
-      Export:
-        Name: !Sub ${AWS::StackName}-SetPoolStatusApi
     GetPoolConfigFunction:
       Description: GetPoolConfig Lambda Function ARN
       Value: !GetAtt GetPoolConfig.Arn

@@ -91,24 +91,6 @@ Resources:
           Properties:
             Path: /getPoolConfig
             Method: GET
-  SetPoolStatus:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/SetPoolStatus/src/
-      Handler: SetPoolStatus.lambda_handler
-      Runtime: python3.14
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref FBPConfigTableName
-      Environment:
-        Variables:
-          FBPConfigTableName: !Ref FBPConfigTableName
-      Events:
-        SetPoolStatus:
-          Type: Api
-          Properties:
-            Path: /setPoolStatus
-            Method: POST
 
   # HTTP API with CORS
   MyHttpApi:
@@ -132,6 +114,69 @@ Resources:
           - OPTIONS
         MaxAge: 300
         AllowCredentials: false
+
+  SetPoolStatusOpen:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/SetPoolStatus/src/
+      Handler: SetPoolStatus.lambda_handler
+      Runtime: python3.14
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPConfigTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPLogsTableName
+      Environment:
+        Variables:
+          FBPConfigTableName: !Ref FBPConfigTableName
+          FBPLogsTableName: !Ref FBPLogsTableName
+      Layers: 
+        - !Ref FBPLibLayer
+      Events:
+        SetPoolStatusOpenPOST:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MyHttpApi
+            Path: /setPoolStatusOpen
+            Method: POST
+            PayloadFormatVersion: "2.0"
+        SetPoolStatusOptions:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MyHttpApi
+            Path: /setPoolStatusOpen
+            Method: OPTIONS
+            PayloadFormatVersion: "2.0"
+
+  SetPoolStatusClosed:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/SetPoolStatus/src/
+      Handler: SetPoolStatus.lambda_handler
+      Runtime: python3.14
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPConfigTableName
+      Environment:
+        Variables:
+          FBPConfigTableName: !Ref FBPConfigTableName
+      Layers: 
+        - !Ref FBPLibLayer
+      Events:
+        SetPoolStatusClosedPOST:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MyHttpApi
+            Path: /setPoolStatusClosed
+            Method: POST
+            PayloadFormatVersion: "2.0"
+        SetPoolStatusClosedOptions:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MyHttpApi
+            Path: /setPoolStatusClosed
+            Method: OPTIONS
+            PayloadFormatVersion: "2.0"  
 
   GetFBPUserPython:
     Type: AWS::Serverless::Function
@@ -788,14 +833,22 @@ Outputs:
       Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getPoolConfig
       Export:
         Name: !Sub ${AWS::StackName}-GetPoolConfigApi
-    SetPoolStatusFunction:
-      Description: SetPoolStatus Lambda Function ARN
-      Value: !GetAtt SetPoolStatus.Arn
-    SetPoolStatusApi:
-      Description: SetPoolStatus API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/setPoolStatus
+    SetPoolStatusOpenFunction:
+      Description: SetPoolStatusOpen Lambda Function ARN
+      Value: !GetAtt SetPoolStatusOpen.Arn
+    SetPoolStatusOpenApi:
+      Description: SetPoolStatusOpen API Endpoint
+      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod/setPoolStatusOpen
       Export:
         Name: !Sub ${AWS::StackName}-SetPoolStatusApi
+    SetPoolStatusClosedFunction:
+      Description: SetPoolStatusClosed Lambda Function ARN
+      Value: !GetAtt SetPoolStatusClosed.Arn
+    SetPoolStatusClosedApi:
+      Description: SetPoolStatusClosed API Endpoint
+      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod/setPoolStatusClosed
+      Export:
+        Name: !Sub ${AWS::StackName}-SetPoolStatusClosedApi
     # THe entry belpw can be deleted after testing the HttpApi endpoint.
     # GetFBPUserPythonFunction:
       # Description: GetFBPUserPython Lambda Function ARN

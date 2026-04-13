@@ -13,19 +13,30 @@ def getCurrentWeek():
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(FBP_CONFIG_TABLE_NAME)
     try:
-        '''
-        There is only one row in FBP-Config.
-        '''
-        response = table.scan(Limit=1)
-        item = response.get('Items')[0] if response.get('Items') else None
-        if item:
-            week_number = item.get('Week', None)
-            if isinstance(week_number, Decimal):
-                week_number = int(week_number)
-            return week_number
-        else:
+        response = table.scan()
+        items = response.get('Items', [])
+
+        while 'LastEvaluatedKey' in response:
+            response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+            items.extend(response.get('Items', []))
+
+        if not items:
             logger.error("No configuration found in FBP-Config table.")
             return None
+
+        max_week = None
+        for item in items:
+            week_number = item.get('Week')
+            if isinstance(week_number, Decimal):
+                week_number = int(week_number)
+            if isinstance(week_number, int) and (max_week is None or week_number > max_week):
+                max_week = week_number
+
+        if max_week is None:
+            logger.error("No valid Week values found in FBP-Config table.")
+            return None
+
+        return max_week
     except ClientError as e:
         logger.error(f"DynamoDB Error: {e}")
         return None
