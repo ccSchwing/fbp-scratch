@@ -7,12 +7,6 @@ Globals:
     Environment:
       Variables:
         POWERTOOLS_SERVICE_NAME: FBPService
-  Api:
-    Cors:
-      AllowMethods: '''GET,POST,OPTIONS'''
-      AllowHeaders: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
-      # AllowOrigin: "'https://my-fbp.com'"
-      AllowOrigin: '''*'''
 Parameters:
   FBPUsersTableName:
     Type: String
@@ -21,19 +15,15 @@ Parameters:
     Type: String
     Default: FBP-Config
   FBPScheduleTableName:
-    # Added parameter for schedule table
     Type: String
     Default: 2025-Schedule
   FBPPicksTableName:
-    # Added parameter for picks table
     Type: String
     Default: FBP-Picks
   FBPLogsTableName:
-    # Added parameter for logs table
     Type: String
     Default: 2025-Log
   FBPWeeklyResultsTableName:
-    # Added parameter for weekly results table
     Type: String
     Default: FBP-Weekly-Results
   FBPWeeklyResultsWeekIndexName:
@@ -54,6 +44,78 @@ Resources:
         - python3.14
     Metadata:
       BuildMethod: python3.14
+  SaveFBPPicksPython:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/SaveFBPPicksPython/src/
+      Handler: SaveFBPPicks.lambda_handler
+      Runtime: python3.14
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPLogsTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPPicksTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPConfigTableName
+      Environment:
+        Variables:
+          FBPConfigTableName: !Ref FBPConfigTableName
+          FBPPicksTableName: !Ref FBPPicksTableName
+          FBPLogsTableName: !Ref FBPLogsTableName
+      Layers: 
+        - !Ref FBPLibLayer
+      Events:
+        SaveFBPPicksPOST:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MyHttpApi
+            Path: /saveFBPPicks
+            Method: POST
+            PayloadFormatVersion: "2.0"
+        SaveFBPPicksOptions:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MyHttpApi
+            Path: /saveFBPPicks
+            Method: OPTIONS
+            PayloadFormatVersion: "2.0"
+
+  GetPickSheetPython:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/GetPickSheetPython/src/
+      Handler: GetPickSheet.lambda_handler
+      Runtime: python3.14
+      MemorySize: 1024
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPLogsTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPConfigTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPScheduleTableName
+      Environment:
+        Variables:
+          FBPConfigTableName: !Ref FBPConfigTableName
+          FBPPicksTableName: !Ref FBPPicksTableName
+          FBPScheduleTableName: !Ref FBPScheduleTableName
+      Layers: 
+        - !Ref FBPLibLayer
+      Events:
+        GetPickSheetGET:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MyHttpApi
+            Path: /getPickSheet
+            Method: GET
+            PayloadFormatVersion: "2.0"
+        GetPickSheetOptions:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MyHttpApi
+            Path: /getPickSheet
+            Method: OPTIONS
+            PayloadFormatVersion: "2.0"
 
   GetPoolOpenEvent:
     Type: AWS::Serverless::Function
@@ -69,7 +131,7 @@ Resources:
           FBPConfigTableName: !Ref FBPConfigTableName
       Events:
         GetPoolOpen:
-          Type: Api
+          Type: HttpApi
           Properties:
             Path: /getPoolOpen
             Method: GET
@@ -87,8 +149,9 @@ Resources:
           FBPConfigTableName: !Ref FBPConfigTableName
       Events:
         GetPoolConfig:
-          Type: Api
+          Type: HttpApi
           Properties:
+            ApiId: !Ref MyHttpApi
             Path: /getPoolConfig
             Method: GET
 
@@ -276,6 +339,8 @@ Resources:
       Runtime: python3.14
       Policies:
         - DynamoDBReadPolicy:
+            TableName: !Ref FBPConfigTableName
+        - DynamoDBReadPolicy:
             TableName: !Ref FBPPicksTableName
         - DynamoDBCrudPolicy:
             TableName: !Ref FBPLogsTableName
@@ -283,187 +348,17 @@ Resources:
         Variables:
           FBPPicksTableName: !Ref FBPPicksTableName
           FBPLogsTableName: !Ref FBPLogsTableName
+          FBPConfigTableName: !Ref FBPConfigTableName
+      Layers:
+        - !Ref FBPLibLayer
       Events:
         GetFBPPicksPython:
-          Type: Api
+          Type: HttpApi
           Properties:
+            ApiId: !Ref MyHttpApi
             Path: /getFBPPicksPython
             Method: POST
-  GetPreSignedUrl:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: com.fbp.GetPreSignedUrlHandler::handleRequest
-      Runtime: java11
-      CodeUri: src/GetPreSignedUrl/target/GetPreSignedUrl-1.0.jar
-      Environment:
-        Variables:
-          S3_BUCKET_NAME: !Ref S3BucketName
-          FBPLogsTableName: !Ref FBPLogsTableName
-      Policies:
-        - DynamoDBCrudPolicy:
-           TableName: !Ref FBPLogsTableName
-        - S3ReadPolicy:
-            BucketName: !Ref S3BucketName
-      Events:
-        GetPresignedUrl:
-          Type: Api
-          Properties:
-            Path: /presigned-url
-            Method: get
-        GetPresignedUrlOptions:
-          Type: Api
-          Properties:
-            Path: /presigned-url
-            Method: options
-
-
-  AddFBPUser:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/AddFBPUser/target/AddFBPUser-1.0.jar
-      Handler: com.fbp.AddFBPUser::addFBPUser
-      Runtime: java11
-      Architectures:
-        - x86_64
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            Path: /addFBPUser
-            Method: post
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref FBPUsersTableName
-        - DynamoDBReadPolicy:
-            TableName: !Ref FBPConfigTableName
-        - DynamoDBCrudPolicy:
-            TableName: !Ref FBPLogsTableName
-        - Statement:
-            - Effect: Allow
-              Action: lambda:InvokeFunction
-              Resource: !GetAtt GetPoolConfig.Arn
-      Environment:
-        Variables:
-          FBPUsersTableName: !Ref FBPUsersTableName
-          FBPConfigTableName: !Ref FBPConfigTableName
-          FBPLogsTableName: !Ref FBPLogsTableName
-          GET_POOL_CONFIG_FUNCTION: !Ref GetPoolConfig
-  GetFBPPicks:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/GetFBPPicks/target/GetFBPPicks-1.0.jar
-      Handler: com.fbp.GetFBPPicks::getFBPPicks
-      Runtime: java11
-      Architectures:
-        - x86_64
-      # Remove MemorySize here since it's in Globals
-      # Remove Environment here since it's in Globals
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref FBPPicksTableName
-        - DynamoDBReadPolicy:
-            TableName: !Ref FBPConfigTableName
-        - DynamoDBReadPolicy:
-            TableName: !Ref FBPUsersTableName
-        - Statement:
-            - Effect: Allow
-              Action: lambda:InvokeFunction
-              Resource: !GetAtt GetPoolConfig.Arn
-      Environment:
-        Variables:
-          FBPPicksTableName: !Ref FBPPicksTableName
-          FBPConfigTableName: !Ref FBPConfigTableName
-          FBPUsersTableName: !Ref FBPUsersTableName
-          GET_POOL_CONFIG_FUNCTION: !Ref GetPoolConfig
-      Events:
-        GetFBPUserPost:
-          Type: Api
-          Properties:
-            Path: /getFBPPicks
-            Method: POST
-        GetFBPUserOptions:
-          Type: Api
-          Properties:
-            Path: /getFBPPicks
-            Method: OPTIONS
-
-  GetFBPUser:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/GetFBPUser/target/GetFBPUser-1.0.jar
-      Handler: com.fbp.GetFBPUser::getFBPUser
-      Runtime: java11
-      Architectures:
-        - x86_64
-      # Remove MemorySize here since it's in Globals
-      # Remove Environment here since it's in Globals
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref FBPConfigTableName
-        - DynamoDBReadPolicy:
-            TableName: !Ref FBPUsersTableName
-        - DynamoDBCrudPolicy:
-            TableName: !Ref FBPLogsTableName
-        - Statement:
-            - Effect: Allow
-              Action: lambda:InvokeFunction
-              Resource: !GetAtt GetPoolConfig.Arn
-      Environment:
-        Variables:
-          FBPUsersTableName: !Ref FBPUsersTableName
-          FBPLogsTableName: !Ref FBPLogsTableName
-          FBPConfigTableName: !Ref FBPConfigTableName
-          GET_POOL_CONFIG_FUNCTION: !Ref GetPoolConfig
-      Events:
-        GetFBPUserPost:
-          Type: Api
-          Properties:
-            Path: /getFBPUser
-            Method: POST
-        GetFBPUserOptions:
-          Type: Api
-          Properties:
-            Path: /getFBPUser
-            Method: OPTIONS
-  GetAllFBPPicks:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/GetAllFBPPicks/target/GetAllFBPPicks-1.0.jar
-      Handler: com.fbp.GetAllFBPPicks::getAllFBPPicks
-      Runtime: java11
-      Architectures:
-        - x86_64
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref FBPPicksTableName
-        - DynamoDBCrudPolicy:
-            TableName: !Ref FBPLogsTableName
-        - DynamoDBReadPolicy:
-            TableName: !Ref FBPUsersTableName
-        - DynamoDBReadPolicy:
-            TableName: !Ref FBPConfigTableName
-        - Statement:
-            - Effect: Allow
-              Action: lambda:InvokeFunction
-              Resource: !GetAtt GetPoolConfig.Arn
-      Environment:
-        Variables:
-          FBPPicksTableName: !Ref FBPPicksTableName
-          FBPLogsTableName: !Ref FBPLogsTableName
-          FBPUsersTableName: !Ref FBPUsersTableName
-          FBPConfigTableName: !Ref FBPConfigTableName
-          GET_POOL_CONFIG_FUNCTION: !Ref GetPoolConfig
-      Events:
-        GetAllFBPPicks:
-          Type: Api
-          Properties:
-            Path: /getAllFBPPicks
-            Method: GET
-        GetAllFBPPicksOptions:
-          Type: Api
-          Properties:
-            Path: /getAllFBPPicks
-            Method: OPTIONS
+            PayloadFormatVersion: "2.0"
 
   GetAllFBPPicksPython:
     Type: AWS::Serverless::Function
@@ -510,288 +405,6 @@ Resources:
             Path: /getAllFBPPicks
             Method: OPTIONS
 
-  GetPickSheet:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/GetPickSheet/target/GetPickSheet-1.0.jar
-      Handler: com.fbp.GetPickSheet::getPickSheet
-      Runtime: java11
-      Architectures:
-        - x86_64
-      # Remove MemorySize here since it's in Globals
-      # Remove Environment here since it's in Globals
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref FBPScheduleTableName
-        - DynamoDBReadPolicy:
-            TableName: !Ref FBPConfigTableName
-        - DynamoDBCrudPolicy:
-            TableName: !Ref FBPLogsTableName
-        - Statement:
-            - Effect: Allow
-              Action: lambda:InvokeFunction
-              Resource: !GetAtt GetPoolConfig.Arn
-      Environment:
-        Variables:
-          FBPScheduleTableName: !Ref FBPScheduleTableName
-          FBPConfigTableName: !Ref FBPConfigTableName
-          FBPLogsTableName: !Ref FBPLogsTableName
-          GET_POOL_CONFIG_FUNCTION: !Ref GetPoolConfig
-      Events:
-        GetPickSheetPost:
-          Type: Api
-          Properties:
-            Path: /getPickSheet
-            Method: GET
-        GetPickSheetOptions:
-          Type: Api
-          Properties:
-            Path: /getPickSheet
-            Method: OPTIONS
-  UpdateFinalScores:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/UpdateFinalScores/target/UpdateFinalScores-1.0.jar
-      Handler: com.fbp.UpdateFinalScores::updateFinalScores
-      Runtime: java11
-      Architectures:
-        - x86_64
-      # Remove MemorySize here since it's in Globals
-      # Remove Environment here since it's in Globals
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref FBPScheduleTableName
-        - DynamoDBReadPolicy:
-            TableName: !Ref FBPConfigTableName
-        - DynamoDBCrudPolicy:
-            TableName: !Ref FBPWeeklyResultsTableName
-        - Statement:
-            - Effect: Allow
-              Action: lambda:InvokeFunction
-              Resource: !GetAtt GetPoolConfig.Arn
-      Environment:
-        Variables:
-          FBPScheduleTableName: !Ref FBPScheduleTableName
-          FBPConfigTableName: !Ref FBPConfigTableName
-          GET_POOL_CONFIG_FUNCTION: !Ref GetPoolConfig
-      Events:
-        UpdateFinalScoresGet:
-          Type: Api
-          Properties:
-            Path: /updateFinalScores
-            Method: GET
-        UpdateFinalScoresOptions:
-          Type: Api
-          Properties:
-            Path: /updateFinalScores
-            Method: OPTIONS
-  CalcWeeklyResults:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/CalcWeeklyResults/target/CalcWeeklyResults-1.0.jar
-      Handler: com.fbp.CalcWeeklyResults::calcWeeklyResults
-      Runtime: java11
-      Architectures:
-        - x86_64
-      # Remove MemorySize here since it's in Globals
-      # Remove Environment here since it's in Globals
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref FBPWeeklyResultsTableName
-        - DynamoDBCrudPolicy:
-            TableName: !Ref FBPScheduleTableName
-        - DynamoDBReadPolicy:
-            TableName: !Ref FBPPicksTableName
-        - DynamoDBReadPolicy:
-            TableName: !Ref FBPConfigTableName
-        - DynamoDBCrudPolicy:
-            TableName: !Ref FBPUsersTableName
-        - DynamoDBCrudPolicy:
-            TableName: !Ref FBPLogsTableName
-        - Statement:
-            - Effect: Allow
-              Action: lambda:InvokeFunction
-              Resource: !GetAtt GetPoolConfig.Arn
-      Environment:
-        Variables:
-          FBPWeeklyResultsTableName: !Ref FBPWeeklyResultsTableName
-          FBPScheduleTableName: !Ref FBPScheduleTableName
-          FBPPicksTableName: !Ref FBPPicksTableName
-          FBPConfigTableName: !Ref FBPConfigTableName
-          FBPUsersTableName: !Ref FBPUsersTableName
-          FBPWeeklyResultsWeekIndexName: !Ref FBPWeeklyResultsWeekIndexName
-          FBPLogsTableName: !Ref FBPLogsTableName
-          GET_POOL_CONFIG_FUNCTION: !Ref GetPoolConfig
-      Events:
-        CalcWeeklyResultsGet:
-          Type: Api
-          Properties:
-            Path: /calcWeeklyResults
-            Method: GET
-        CalcWeeklyResultsOptions:
-          Type: Api
-          Properties:
-            Path: /calcWeeklyResults
-            Method: OPTIONS
-  GetWeeklyResultsSheet:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/GetWeeklyResultsSheet/target/GetWeeklyResultsSheet-1.0.jar
-      Handler: com.fbp.GetWeeklyResultsSheet::getWeeklyResultsSheet
-      Runtime: java11
-      Architectures:
-        - x86_64
-      # Remove MemorySize here since it's in Globals
-      # Remove Environment here since it's in Globals
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref FBPLogsTableName
-        - DynamoDBCrudPolicy:
-            TableName: !Ref FBPWeeklyResultsTableName
-        - DynamoDBReadPolicy:
-            TableName: !Ref FBPConfigTableName
-        - S3WritePolicy:
-            BucketName: my-fbp.com
-        - Statement:
-            - Effect: Allow
-              Action: lambda:InvokeFunction
-              Resource: !GetAtt GetPoolConfig.Arn
-      Environment:
-        Variables:
-          FBPWeeklyResultsTableName: !Ref FBPWeeklyResultsTableName
-          FBPWeeklyResultsWeekIndexName: !Ref FBPWeeklyResultsWeekIndexName
-          FBPConfigTableName: !Ref FBPConfigTableName
-          FBPLogsTableName: !Ref FBPLogsTableName
-          BUCKET_NAME: my-fbp.com
-          GET_POOL_CONFIG_FUNCTION: !Ref GetPoolConfig
-      Events:
-        GetWeeklyResultsSheetGet:
-          Type: Api
-          Properties:
-            Path: /getWeeklyResultsSheet
-            Method: GET
-        GetWeeklyResultsSheetOptions:
-          Type: Api
-          Properties:
-            Path: /getWeeklyResultsSheet
-            Method: OPTIONS
-
-  SaveContent:
-      Type: AWS::Serverless::Function
-      Properties:
-        CodeUri: src/SaveContent/target/SaveContent-1.0.jar
-        Handler: com.fbp.SaveContent::handleRequest
-        Runtime: java11
-        Architectures:
-          - x86_64
-        MemorySize: 512
-        Timeout: 30
-        Environment:
-          Variables:
-            BUCKET_NAME: my-fbp.com
-            FBPConfigTableName: !Ref FBPConfigTableName
-            FBPLogsTableName: !Ref FBPLogsTableName
-            GET_POOL_CONFIG_FUNCTION: !Ref GetPoolConfig
-        Policies:
-          - DynamoDBReadPolicy:
-              TableName: !Ref FBPConfigTableName
-          - DynamoDBCrudPolicy:
-              TableName: !Ref FBPLogsTableName
-          - S3WritePolicy:
-              BucketName: my-fbp.com
-          - Statement:
-              - Effect: Allow
-                Action: lambda:InvokeFunction
-                Resource: !GetAtt GetPoolConfig.Arn
-        Events:
-          SaveContentPost:
-            Type: Api
-            Properties:
-              Path: /save-content
-              Method: POST
-          SaveContentOptions:
-            Type: Api
-            Properties:
-              Path: /save-content
-              Method: OPTIONS
-  ContentSaverDashboard:
-    Type: AWS::CloudWatch::Dashboard
-    Properties:
-      DashboardName: !Sub ${AWS::StackName}
-      DashboardBody: !Sub |
-          {
-            "widgets": [
-              {
-                "type": "metric",
-                "x": 0, "y": 0, "width": 12, "height": 6,
-                "properties": {
-                  "metrics": [
-                    ["AWS/Lambda", "Invocations", "FunctionName", "${SaveContent}"],
-                    [".", "Errors", ".", "."],
-                    [".", "Duration", ".", "."]
-                  ],
-                  "period": 300,
-                  "stat": "Sum",
-                  "region": "${AWS::Region}",
-                  "title": "Lambda Metrics"
-                }
-              },
-              {
-                "type": "metric",
-                "x": 0, "y": 6, "width": 12, "height": 6,
-                "properties": {
-                  "metrics": [
-                    ["AWS/S3", "NumberOfObjects", "BucketName", "my-fbp.com", "StorageType", "AllStorageTypes"]
-                  ],
-                  "period": 86400,
-                  "stat": "Average",
-                  "region": "${AWS::Region}",
-                  "title": "S3 Object Count"
-                }
-              }
-            ]
-          }
-  SaveFBPPicks:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/SaveFBPPicks/target/SaveFBPPicks-1.0.jar
-      Handler: com.fbp.SaveFBPPicks::saveFBPPicks
-      Runtime: java11
-      # AutoPublishAlias: live
-      SnapStart: null # ApplyOn: PublishedVersions
-      Architectures:
-        - x86_64
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref FBPPicksTableName
-        - DynamoDBCrudPolicy:
-            TableName: !Ref FBPLogsTableName
-        - DynamoDBReadPolicy:
-            TableName: !Ref FBPUsersTableName
-        - DynamoDBReadPolicy:
-            TableName: !Ref FBPConfigTableName
-        - Statement:
-            - Effect: Allow
-              Action: lambda:InvokeFunction
-              Resource: !GetAtt GetPoolConfig.Arn
-      Environment:
-        Variables:
-          FBPPicksTableName: !Ref FBPPicksTableName
-          FBPLogsTableName: !Ref FBPLogsTableName
-          FBPUsersTableName: !Ref FBPUsersTableName
-          FBPConfigTableName: !Ref FBPConfigTableName
-          GET_POOL_CONFIG_FUNCTION: !Ref GetPoolConfig
-      Events:
-        SaveFBPPicks:
-          Type: Api
-          Properties:
-            Path: /saveFBPPicks
-            Method: POST
-        SaveFBPPicksOptions:
-          Type: Api
-          Properties:
-            Path: /saveFBPPicks
-            Method: OPTIONS
 
 Outputs:
     HttpAPiUrl:
@@ -804,35 +417,35 @@ Outputs:
       Value: !Ref MyHttpApi
       Export:
         Name: !Sub ${AWS::StackName}-HttpApiId
-    ApiUrl:
-      Description: URL of the API gateway
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
+    SaveFBPPicksPythonFunction:
+      Description: SaveFBPPicksPython Lambda Function ARN
+      Value: !GetAtt SaveFBPPicksPython.Arn
+    SaveFBPPicksPythonApi:
+      Description: SaveFBPPicksPython API Endpoint
+      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod/saveFBPPicks
       Export:
-        Name: !Sub ${AWS::StackName}-ApiUrl
-    GetFBPPicksPythonFunction:
-      Description: GetFBPPicksPython Lambda Function ARN
-      Value: !GetAtt GetFBPPicksPython.Arn
+        Name: !Sub ${AWS::StackName}-SaveFBPPicksApi
+    GetPickSheetPythonFunction:
+      Description: GetPickSheetPython Lambda Function ARN
+      Value: !GetAtt GetPickSheetPython.Arn
+    GetPickSheetPythonApi:
+      Description: GetPickSheetPython API Endpoint
+      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod/getPickSheetPython
+      Export:
+        Name: !Sub ${AWS::StackName}-GetPickSheetApi
     GetFBPPicksPythonApi:
       Description: GetFBPPicksPython API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getFBPPicksPython
+      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod/getFBPPicksPython
       Export:
         Name: !Sub ${AWS::StackName}-GetFBPPicksPythonApi
     GetPoolOpenFunction:
       Description: GetPoolOpen Lambda Function ARN
       Value: !GetAtt GetPoolOpenEvent.Arn
-    GetPoolOpenApi:
-      Description: GetPoolOpen API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getPoolOpen
       Export:
         Name: !Sub ${AWS::StackName}-GetPoolOpenApi
     GetPoolConfigFunction:
       Description: GetPoolConfig Lambda Function ARN
       Value: !GetAtt GetPoolConfig.Arn
-    GetPoolConfigApi:
-      Description: GetPoolConfig API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getPoolConfig
-      Export:
-        Name: !Sub ${AWS::StackName}-GetPoolConfigApi
     SetPoolStatusOpenFunction:
       Description: SetPoolStatusOpen Lambda Function ARN
       Value: !GetAtt SetPoolStatusOpen.Arn
@@ -849,26 +462,16 @@ Outputs:
       Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod/setPoolStatusClosed
       Export:
         Name: !Sub ${AWS::StackName}-SetPoolStatusClosedApi
-    # THe entry belpw can be deleted after testing the HttpApi endpoint.
-    # GetFBPUserPythonFunction:
-      # Description: GetFBPUserPython Lambda Function ARN
-      # Value: !GetAtt GetFBPUserPython.Arn
     GetFBPUserPythonEndpoint:
        Description: GetFBPUserPython API Endpoint
        Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getFBPUserPython
        Export:
          Name: !Sub ${AWS::StackName}-GetFBPUserPythonHttpApi
-    # GetFBPUserPythonApi:
-      # Description: GetFBPUserPython API Endpoint
-      # Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getFBPUserPython
-      # Export:
-        # Name: !Sub ${AWS::StackName}-GetFBPUserPythonApi
     GetAllFBPPicksPythonEndpoint:
       Description: GetAllFBPPicksPython API Endpoint
       Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod/getAllFBPPicks
       Export:
         Name: !Sub ${AWS::StackName}-GetAllFBPPicksPythonHttpApi
-  
     UpdateFBPUserPythonEndpoint:
       Description: UpdateFBPUserPython API Endpoint
       Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/updateFBPUser
@@ -879,91 +482,3 @@ Outputs:
       Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod/addFBPUser
       Export:
         Name: !Sub ${AWS::StackName}-AddFBPUserPythonHttpApi
-    AddFBPUserFunction:
-      Description: AddFBPUser Lambda Function ARN
-      Value: !GetAtt AddFBPUser.Arn
-    AddFBPUserApi:
-      Description: AddFBPUser API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/addFBPUser
-      Export:
-        Name: !Sub ${AWS::StackName}-AddFBPUserApi
-    GetFBPUserFunction:
-      Description: GetFBPUser Lambda Function ARN
-      Value: !GetAtt GetFBPUser.Arn
-    GetFBPUserApi:
-      Description: GetFBPUser API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getFBPUser
-      Export:
-        Name: !Sub ${AWS::StackName}-GetFBPUserApi
-    GetPickSheetFunction:
-      Description: GetPickSheet Lambda Function ARN
-      Value: !GetAtt GetPickSheet.Arn
-    GetPickSheetApi:
-      Description: GetPickSheet API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getPickSheet
-      Export:
-        Name: !Sub ${AWS::StackName}-GetPickSheetApi
-    SaveContentFunction:
-      Description: SaveContent Lambda Function ARN
-      Value: !GetAtt SaveContent.Arn
-      Export: 
-        Name: !Sub ${AWS::StackName}-SaveContentFunction  
-    SaveContentApi:
-      Description: SaveContent API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/save-content
-      Export:
-        Name: !Sub ${AWS::StackName}-SaveContentApi
-    SaveFBPPicksFunction:
-      Description: SaveFBPPicks Lambda Function ARN
-      Value: !GetAtt SaveFBPPicks.Arn
-      Export:
-        Name: !Sub ${AWS::StackName}-SaveFBPPicksFunction
-    SaveFBPPicksApi:
-      Description: SaveFBPPicks API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/saveFBPPicks
-      Export:
-        Name: !Sub ${AWS::StackName}-SaveFBPPicksApi
-    GetFBPPicksFunction:
-      Description: GetFBPPicks Lambda Function ARN
-      Value: !GetAtt GetFBPPicks.Arn
-      Export:
-        Name: !Sub ${AWS::StackName}-GetFBPPicksFunction
-    GetFBPPicksApi:
-      Description: GetFBPPicks API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getFBPPicks
-      Export:
-        Name: !Sub ${AWS::StackName}-GetFBPPicksApi
-    UpdateFinalScoresFunction:
-      Description: UpdateFinalScores Lambda Function ARN
-      Value: !GetAtt UpdateFinalScores.Arn
-    UpdateFinalScoresApi:
-      Description: UpdateFinalSScores API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/updateFinalScores
-      Export:
-        Name: !Sub ${AWS::StackName}-UpdateFinalScoresApi
-    GetWeeklyResults:
-      Description: GetWeeklyResultsSheet Lambda Function ARN
-      Value: !GetAtt GetWeeklyResultsSheet.Arn
-    GetWeeklyResultsApi:
-      Description: GetWeeklyResultsSheet API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getWeeklyResultsSheet
-      Export:
-        Name: !Sub ${AWS::StackName}-GetWeeklyResultsApi
-    GetPreSignedUrlFunction:
-      Description: GetPreSignedUrl Lambda Function ARN
-      Value: !GetAtt GetPreSignedUrl.Arn
-    GetPreSignedUrlApi:
-      Description: GetPreSignedUrl API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/presigned-url
-      Export:
-        Name: !Sub ${AWS::StackName}-GetPreSignedUrlApi
-    GetAllFBPPicksFunction:
-      Description: GetAllFBPPicks Lambda Function ARN
-      Value: !GetAtt GetAllFBPPicks.Arn
-      Export:
-        Name: !Sub ${AWS::StackName}-GetAllFBPPicksFunction
-    GetAllFBPPicksApi:
-      Description: GetAllFBPPicks API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getAllFBPPicks
-      Export:
-        Name: !Sub ${AWS::StackName}-GetAllFBPPicksApi

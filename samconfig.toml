@@ -4,9 +4,9 @@ version = 0.1
 template_file = "min.yaml"
 
 [default.deploy.parameters]
-stack_name = "fbp-lambda"
+stack_name = "fbp-lambda-v2"
 resolve_s3 = true
-s3_prefix = "fbp-lambda"
+s3_prefix = "fbp-lambda-v2"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
 disable_rollback = false

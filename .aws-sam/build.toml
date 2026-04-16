@@ -16,7 +16,7 @@ architecture = "x86_64"
 handler = "SetPoolStatus.lambda_handler"
 manifest_hash = ""
 packagetype = "Zip"
-functions = ["SetPoolStatus"]
+functions = ["SetPoolStatusOpen", "SetPoolStatusClosed"]
 
 [function_build_definitions.cc8e3789-52f0-4431-9c10-c7cccab40188]
 codeuri = "/Users/ccs/projects/fbp-lambda/src/GetFBPUser-Python/src"
@@ -152,6 +152,15 @@ handler = "com.fbp.SaveFBPPicks::saveFBPPicks"
 manifest_hash = ""
 packagetype = "Zip"
 functions = ["SaveFBPPicks"]
+
+[function_build_definitions.b0fa38e0-49e0-4c1b-8dd2-5fe6f0bd5a56]
+codeuri = "/Users/ccs/projects/fbp-lambda/src/GetPickSheetPython/src"
+runtime = "python3.14"
+architecture = "x86_64"
+handler = "GetPickSheet.lambda_handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["GetPickSheetPython"]
 
 [layer_build_definitions.7b792545-358c-4cb0-a6cf-7f00d391429e]
 layer_name = "FBPLibLayer"

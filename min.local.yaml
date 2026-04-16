@@ -74,6 +74,38 @@ Resources:
           - OPTIONS
         MaxAge: 300
         AllowCredentials: false
+  SaveFBPPicksPython:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/SaveFBPPicksPython/src/
+      Handler: SaveFBPPicks.lambda_handler
+      Runtime: python3.14
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPPicksTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPConfigTableName
+      Environment:
+        Variables:
+          FBPConfigTableName: !Ref FBPConfigTableName
+          FBPPicksTableName: !Ref FBPPicksTableName
+      Layers: 
+        - !Ref FBPLibLayer
+      Events:
+        SaveFBPPicksPOST:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MyHttpApi
+            Path: /saveFBPPicks
+            Method: POST
+            PayloadFormatVersion: "2.0"
+        SaveFBPPicksOptions:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MyHttpApi
+            Path: /saveFBPPicks
+            Method: OPTIONS
+            PayloadFormatVersion: "2.0"
 
   SetPoolStatusOpen:
     Type: AWS::Serverless::Function
@@ -114,6 +146,8 @@ Resources:
       MemorySize: 1024
       Policies:
         - DynamoDBCrudPolicy:
+            TableName: !Ref FBPLogsTableName
+        - DynamoDBCrudPolicy:
             TableName: !Ref FBPConfigTableName
         - DynamoDBReadPolicy:
             TableName: !Ref FBPScheduleTableName
@@ -121,6 +155,7 @@ Resources:
         Variables:
           FBPConfigTableName: !Ref FBPConfigTableName
           FBPScheduleTableName: !Ref FBPScheduleTableName
+          FBPLogsTableName: !Ref FBPLogsTableName
       Layers: 
         - !Ref FBPLibLayer
       Events:
@@ -335,18 +370,25 @@ Resources:
       CodeUri: src/GetFBPPicksPython/src/
       Handler: GetFBPPicksPython.lambda_handler
       Runtime: python3.14
+      Layers:
+        - !Ref FBPLibLayer
       Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPLogsTableName
         - DynamoDBReadPolicy:
             TableName: !Ref FBPPicksTableName
       Environment:
         Variables:
           FBPPicksTableName: !Ref FBPPicksTableName
+          FBPLogsTableName: !Ref FBPLogsTableName
       Events:
         GetFBPPicks:
-          Type: Api
+          Type: HttpApi
           Properties:
+            ApiId: !Ref MyHttpApi
             Path: /getFBPPicksPython
-            Method: GET
+            Method: POST
+            PayloadFormatVersion: "2.0"
   
   GetPoolConfig:
     Type: AWS::Serverless::Function
@@ -856,12 +898,12 @@ Resources:
 Outputs:
     ApiUrl:
       Description: URL of the API gateway
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
+      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/
       Export:
         Name: !Sub ${AWS::StackName}-ApiUrl
     HttpApiUrl:
       Description: URL of the HTTP API gateway
-      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
+      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod/
       Export:
         Name: !Sub ${AWS::StackName}-HttpApiUrl
     HttpApiId:
@@ -869,12 +911,20 @@ Outputs:
       Value: !Ref MyHttpApi
       Export:
         Name: !Sub ${AWS::StackName}-HttpApiId
+    SaveFBPPicksPythonFunction:
+      Description: SaveFBPPicksPython Lambda Function ARN
+      Value: !GetAtt SaveFBPPicksPython.Arn
+    SaveFBPPicksPythonEndpoint:
+      Description: SaveFBPPicksPython API Endpoint
+      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod/saveFBPPicks
+      Export:
+        Name: !Sub ${AWS::StackName}-SaveFBPPicksPythonEndpoint
     GetPickSheetPythonFunction:
       Description: GetPickSheetPython Lambda Function ARN
       Value: !GetAtt GetPickSheetPython.Arn
     GetPickSheetPythonEndpoint:
       Description: GetPickSheetPython API Endpoint
-      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getPickSheet
+      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod/getPickSheet
       Export:
         Name: !Sub ${AWS::StackName}-GetPickSheetPythonEndpoint
     CalcWeeklyResultsPythonFunction:
@@ -882,7 +932,7 @@ Outputs:
       Value: !GetAtt CalcWeeklyResultsPython.Arn
     CalcWeeklyResultsPythonEndpoint:
       Description: CalcWeeklyResultsPython API Endpoint
-      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/calcWeeklyResults
+      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod/calcWeeklyResults
       Export:
         Name: !Sub ${AWS::StackName}-CalcWeeklyResultsPythonEndpoint
     SetPoolStatusOpenFunction:
@@ -890,7 +940,7 @@ Outputs:
       Value: !GetAtt SetPoolStatusOpen.Arn
     SetPoolStatusOpenEndpoint:
       Description: SetPoolStatus API Endpoint
-      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/setPoolStatusOpen
+      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod/setPoolStatusOpen
       Export:
         Name: !Sub ${AWS::StackName}-SetPoolStatusEndpoint
     SetPoolStatusClosedFunction:
@@ -898,7 +948,7 @@ Outputs:
       Value: !GetAtt SetPoolStatusClosed.Arn
     SetPoolStatusClosedEndpoint:
       Description: SetPoolStatus API Endpoint
-      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/setPoolStatusClosed
+      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod/setPoolStatusClosed
       Export:
         Name: !Sub ${AWS::StackName}-SetPoolStatusClosedEndpoint
     AddFBPUserPythonFunction:
@@ -906,12 +956,12 @@ Outputs:
       Value: !GetAtt AddFBPUserPython.Arn
     AddFBPUserPythonEndpoint:
       Description: AddFBPUserPython API Endpoint
-      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/addFBPUser
+      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod/addFBPUser
       Export:
         Name: !Sub ${AWS::StackName}-AddFBPUserPythonEndpoint
     GetAllFBPPicksPythonEndpoint:
         Description: GetAllFBPPicksPython API Endpoint
-        Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getAllFBPPicks
+        Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod/getAllFBPPicks
         Export:
           Name: !Sub ${AWS::StackName}-GetAllFBPPicksPythonEndpoint
     GetFBPPicksPythonFunction:
@@ -919,7 +969,7 @@ Outputs:
       Value: !GetAtt GetFBPPicksPython.Arn
     GetFBPPicksPythonApi:
       Description: GetFBPPicksPython API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getFBPPicks
+      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod/getFBPPicks
       Export:
         Name: !Sub ${AWS::StackName}-GetFBPPicksPythonApi
     GetPoolConfigFunction:
@@ -927,7 +977,7 @@ Outputs:
       Value: !GetAtt GetPoolConfig.Arn
     GetPoolConfigApi:
       Description: GetPoolConfig API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getPoolConfig
+      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/getPoolConfig
       Export:
         Name: !Sub ${AWS::StackName}-GetPoolConfigApi
     GetPoolOpenFunction:
@@ -935,7 +985,7 @@ Outputs:
       Value: !GetAtt GetPoolOpenEvent.Arn
     GetPoolOpenApi:
       Description: GetPoolOpen API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getPoolOpen
+      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/getPoolOpen
       Export:
         Name: !Sub ${AWS::StackName}-GetPoolOpenApi
     GetFBPUserPythonFunction:
@@ -943,7 +993,7 @@ Outputs:
       Value: !GetAtt GetFBPUserPython.Arn
     GetFBPUserPythonApi:
       Description: GetFBPUserPython API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getFBPUserPython
+      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/getFBPUserPython
       Export:
         Name: !Sub ${AWS::StackName}-GetFBPUserPythonApi
     AddFBPUserFunction:
@@ -951,7 +1001,7 @@ Outputs:
       Value: !GetAtt AddFBPUser.Arn
     AddFBPUserApi:
       Description: AddFBPUser API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/addFBPUser
+      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/addFBPUser
       Export:
         Name: !Sub ${AWS::StackName}-AddFBPUserApi
     GetFBPUserFunction:
@@ -959,7 +1009,7 @@ Outputs:
       Value: !GetAtt GetFBPUser.Arn
     GetFBPUserApi:
       Description: GetFBPUser API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getFBPUser
+      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/getFBPUser
       Export:
         Name: !Sub ${AWS::StackName}-GetFBPUserApi
     GetPickSheetFunction:
@@ -967,7 +1017,7 @@ Outputs:
       Value: !GetAtt GetPickSheet.Arn
     GetPickSheetApi:
       Description: GetPickSheet API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getPickSheet
+      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/getPickSheet
       Export:
         Name: !Sub ${AWS::StackName}-GetPickSheetApi
     SaveContentFunction:
@@ -977,7 +1027,7 @@ Outputs:
         Name: !Sub ${AWS::StackName}-SaveContentFunction  
     SaveContentApi:
       Description: SaveContent API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/save-content
+      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/save-content
       Export:
         Name: !Sub ${AWS::StackName}-SaveContentApi
     SaveFBPPicksFunction:
@@ -987,7 +1037,7 @@ Outputs:
         Name: !Sub ${AWS::StackName}-SaveFBPPicksFunction
     SaveFBPPicksApi:
       Description: SaveFBPPicks API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/saveFBPPicks
+      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/saveFBPPicks
       Export:
         Name: !Sub ${AWS::StackName}-SaveFBPPicksApi
     GetFBPPicksFunction:
@@ -997,7 +1047,7 @@ Outputs:
         Name: !Sub ${AWS::StackName}-GetFBPPicksFunction
     GetFBPPicksApi:
       Description: GetFBPPicks API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getFBPPicks
+      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/getFBPPicks
       Export:
         Name: !Sub ${AWS::StackName}-GetFBPPicksApi
     GetAllFBPPicksFunction:
@@ -1005,7 +1055,7 @@ Outputs:
       Value: !GetAtt GetAllFBPPicks.Arn
     GetAllFBPPicksApi:
       Description: GetAllFBPPicks API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getAllFBPPicks
+      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/getAllFBPPicks
       Export:
         Name: !Sub ${AWS::StackName}-GetAllFBPPicksApi
     GetPreSignedUrlFunction:
@@ -1013,7 +1063,7 @@ Outputs:
       Value: !GetAtt GetPreSignedUrl.Arn
     GetPreSignedUrlApi:
       Description: GetPreSignedUrl API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/presigned-url
+      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/presigned-url
       Export:
         Name: !Sub ${AWS::StackName}-GetPreSignedUrlApi
     CalcWeeklyResultsFunction:
@@ -1021,7 +1071,7 @@ Outputs:
       Value: !GetAtt CalcWeeklyResults.Arn
     CalcWeeklyResultsApi:
       Description: CalcWeeklyResults API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/calcWeeklyResults
+      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/calcWeeklyResults
       Export:
         Name: !Sub ${AWS::StackName}-CalcWeeklyResultsApi
     GetWeeklyResultsSheetFunction:
@@ -1029,7 +1079,7 @@ Outputs:
       Value: !GetAtt GetWeeklyResultsSheet.Arn
     GetWeeklyResultsSheetApi:
       Description: GetWeeklyResultsSheet API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/getWeeklyResultsSheet
+      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/getWeeklyResultsSheet
       Export:
         Name: !Sub ${AWS::StackName}-GetWeeklyResultsSheetApi
     UpdateFinalScoresFunction:
@@ -1037,6 +1087,6 @@ Outputs:
       Value: !GetAtt UpdateFinalScores.Arn
     UpdateFinalScoresApi:
       Description: UpdateFinalScores API Endpoint
-      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/updateFinalScores
+      Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/updateFinalScores
       Export:
         Name: !Sub ${AWS::StackName}-UpdateFinalScoresApi

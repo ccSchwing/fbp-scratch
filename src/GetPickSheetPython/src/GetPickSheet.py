@@ -15,7 +15,8 @@ from FBPLib.getCurrentWeek import getCurrentWeek
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-TABLE_NAME = os.environ.get("TABLE_NAME", "FBP-Picks")
+logger.info("Init: GetPickSheet Lambda")
+TABLE_NAME = os.environ.get("FBPScheduleTableName", "FBP-Schedule")
 
 cors_config = CORSConfig(
     allow_origin="*",
@@ -58,10 +59,10 @@ def getPickSheet() -> dict[str, Any]:
     try:
         # get all picks for the current week
         response = table.scan(
-            FilterExpression=boto3.dynamodb.conditions.Attr('week').eq(week)
+            FilterExpression=boto3.dynamodb.conditions.Attr('Week').eq(week)
         )
-        allUserPicks: list[Any] = response.get('Items', []) 
-        if not allUserPicks:
+        schedule: list[Any] = response.get('Items', []) 
+        if not schedule:
             logger.warning(f"No picks found for week {week}")
             fbpLog("fbpadmin@my-fbp-com", "GetPickSheet", f"No picks found for week {week}", "WARNING")
             return {
@@ -69,12 +70,11 @@ def getPickSheet() -> dict[str, Any]:
                 "body": json.dumps({"error": f"No picks found for week {week}"}),
             }
         else:
-            logger.info(f"Retrieved {len(allUserPicks)} picks for week {week}")
-            fbpLog("fbpadmin@my-fbp-com", "GetPickSheet", f"Retrieved {len(allUserPicks)} picks for week {week}", "INFO")
+            logger.info(f"Retrieved {len(schedule)} picks for week {week}")
+            fbpLog("fbpadmin@my-fbp-com", "GetPickSheet", f"Retrieved {len(schedule)} picks for week {week}", "INFO")
             return {
                 "statusCode": 200,
-                "body": allUserPicks,
-                # "body": json.dumps({"picks": allUserPicks}, default=_json_default),
+                "body": schedule,
             }
     except ClientError as e:
         logger.exception("DynamoDB update failed")

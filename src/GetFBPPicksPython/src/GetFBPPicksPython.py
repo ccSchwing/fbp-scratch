@@ -2,20 +2,38 @@ import json
 import os
 import boto3
 import logging
-import ast
 from decimal import Decimal
 from botocore.exceptions import ClientError
-from aws_lambda_powertools.utilities.data_classes import APIGatewayProxyEvent
+from aws_lambda_powertools.event_handler import APIGatewayHttpResolver, Response
+from aws_lambda_powertools.event_handler.api_gateway import CORSConfig
+from FBPLib.fbpLog import fbpLog
+from FBPLib.getCurrentWeek import getCurrentWeek
+
 
 
 '''
-This function will return the user information for the given email address in the event.
+This function will return the user picks for the given email address in the event.
 '''
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
-
+logger.info("Init: GetFBPPicksPython Lambda")
 FBP_PICKS_TABLE_NAME = os.environ.get('FBPPicksTableName', 'FBP-Picks')
+
+cors_config = CORSConfig(
+    allow_origin="*",
+    allow_headers=[
+        "Content-Type",
+        "X-Amz-Date",
+        "Authorization",
+        "X-Api-Key",
+        "X-Amz-Security-Token",
+    ],
+    max_age=86400,
+    allow_credentials=False,
+)
+
+app = APIGatewayHttpResolver(cors=cors_config)
 
 
 def decimal_default(value):
@@ -24,45 +42,52 @@ def decimal_default(value):
         return int(value) if value % 1 == 0 else float(value)
     raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
 
-def lambda_handler(event, context):
+@app.post("/getPicksForUser")
+@app.post("/getFBPPicksPython")
+def getPicksForUser():
     try:
-        apigw_event = APIGatewayProxyEvent(event)
-        # logger.info("Received API Gateway event keys: %s", sorted(event.keys()))
-        body = apigw_event.json_body
-        if body is None:
-            raw_body = event.get('body')
-            if isinstance(raw_body, str) and raw_body:
-                try:
-                    body = json.loads(raw_body)
-                except json.JSONDecodeError:
-                    body = ast.literal_eval(raw_body)
-            elif isinstance(raw_body, dict):
-                body = raw_body
-            else:
-                body = {}
+        body = app.current_event.json_body
+        if not isinstance(body, dict):
+            raise ValueError("Request body must be a JSON object")
         logger.info(f"Parsed JSON body: {body}")
         email = body.get('email')
         logger.info(f"Extracted email from API Gateway event: {email}")
+    except json.JSONDecodeError:
+        logger.error("Invalid JSON in request body")
+        fbpLog("fbpadmin@my-fbp-com", "GetFBPPicksPython", "Invalid JSON in request body", "ERROR")
+        return Response(
+            status_code=400,
+            content_type="application/json",
+            body=json.dumps({
+                'error': 'Invalid JSON',
+                'message': 'Request body must be valid JSON'
+            })
+        )
 
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
-        return {
-            'statusCode': 400,
-            'body': json.dumps({
+        fbpLog("fbpadmin@my-fbp-com", "GetFBPPicksPython", f"Unexpected error: {e}", "ERROR")
+        return Response(
+            status_code=400,
+            content_type="application/json",
+            body=json.dumps({
                 'error': 'Invalid request body',
                 'message': 'Request body must be valid JSON with an email field'
             })
-        }
+        )
 
-    if not email:   
-        return {
-            'statusCode': 400,
-            'body': json.dumps({
+    if not email:  
+        logger.error("Email address is required in request body")
+        fbpLog("fbpadmin@my-fbp-com", "GetFBPPicksPython", "Email address is required in request body", "ERROR")
+        return Response(
+            status_code=400,
+            content_type="application/json",
+            body=json.dumps({
                 'error': 'Email address is required',
                 'message': 'Please provide email address in the event'
             })
-        }
-    item = get_fbp_picks(email)
+        )
+    item = getPicks(email)
     
     if item:
         # Convert common top-level numeric fields for readability.
@@ -70,35 +95,44 @@ def lambda_handler(event, context):
             item['week'] = int(item['week'])
         if 'tieBreaker' in item:
             item['tieBreaker'] = int(item['tieBreaker'])
-        return {
-            'statusCode': 200,
-            'body': json.dumps({
+        return Response(
+            status_code=200,
+            content_type="application/json",
+            body=json.dumps({
                 'email': item.get('email'),
                 'displayName': item.get('displayName'),
                 'picks': item.get('picks'),
                 'tieBreaker': item.get('tieBreaker'),
                 'week': item.get('week')
-                }, default=decimal_default)
-            }
+            }, default=decimal_default)
+        )
     else:
         logger.info(f"User not found: {email}")
-        return {
-            'statusCode': 404,
-            'body': json.dumps({
+        fbpLog("fbpadmin@my-fbp-com", "GetFBPPicksPython", f"User not found: {email}", "ERROR")
+        return Response(
+            status_code=404,
+            content_type="application/json",
+            body=json.dumps({
                 'error': f'User with email {email} not found',
                 'email': email
-                })
-            } 
+            })
+        )
         
 
-def get_fbp_picks(emailAddress):
+def getPicks(emailAddress):
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(FBP_PICKS_TABLE_NAME)
+    week = getCurrentWeek()
     try:
-        response = table.get_item(
-            Key={'email': emailAddress}
-        )
+        response = table.get_item(Key={'email': emailAddress})
         item = response['Item'] if 'Item' in response else None
+
+        # The primary key lookup is by email; apply week check in code.
+        if item is not None:
+            item_week = item.get('week')
+            if week is None or item_week is None or int(item_week) != int(week):
+                return None
+
         return item
     except ClientError as e:
         logger.error(f"DynamoDB Error: {e}")
@@ -106,3 +140,7 @@ def get_fbp_picks(emailAddress):
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
         return None
+
+
+def lambda_handler(event, context):
+    return app.resolve(event, context)

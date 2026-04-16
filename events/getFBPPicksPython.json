@@ -1,8 +1,22 @@
 {
-  "httpMethod": "GET",
-  "path": "/getPickSheet",
+  "version": "2.0",
+  "routeKey": "POST /getFBPPicksPython",
+  "rawPath": "/getFBPPicksPython",
+  "rawQueryString": "",
   "headers": {
-    "Content-Type": "application/json"
+    "content-type": "application/json"
+  },
+  "body": "{\"email\":\"chuckschwing@proton.me\"}",
+  "requestContext": {
+    "http": {
+      "method": "POST",
+      "path": "/getFBPPicksPython",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "127.0.0.1",
+      "userAgent": "sam-local"
+    },
+    "routeKey": "POST /getFBPPicksPython",
+    "stage": "$default"
   },
   "isBase64Encoded": false
 }
