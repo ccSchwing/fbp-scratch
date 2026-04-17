@@ -44,6 +44,91 @@ Resources:
         - python3.14
     Metadata:
       BuildMethod: python3.14
+
+  CalcWeeklyResultsPython:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/CalcWeeklyResultsPython/src/
+      Handler: CalcWeeklyResults.lambda_handler
+      Runtime: python3.14
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPUsersTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPWeeklyResultsTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPLogsTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPPicksTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPConfigTableName
+      Environment:
+        Variables:
+          FBPUsersTableName: !Ref FBPUsersTableName
+          FBPConfigTableName: !Ref FBPConfigTableName
+          FBPPicksTableName: !Ref FBPPicksTableName
+          FBPLogsTableName: !Ref FBPLogsTableName
+          FBPWeeklyResultsTableName: !Ref FBPWeeklyResultsTableName
+      Layers: 
+        - !Ref FBPLibLayer
+      Events:
+        CalcWeeklyResultsGET:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MyHttpApi
+            Path: /calcWeeklyResults
+            Method: GET
+            PayloadFormatVersion: "2.0"
+        CalcWeeklyResultsOptions:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MyHttpApi
+            Path: /calcWeeklyResults
+            Method: OPTIONS
+            PayloadFormatVersion: "2.0"
+   
+  GetWeeklyResultsPython:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/GetWeeklyResultsPython/src/
+      Handler: GetWeeklyResults.lambda_handler
+      Runtime: python3.14
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPUsersTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPWeeklyResultsTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FBPLogsTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPPicksTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref FBPConfigTableName
+      Environment:
+        Variables:
+          FBPUsersTableName: !Ref FBPUsersTableName
+          FBPConfigTableName: !Ref FBPConfigTableName
+          FBPPicksTableName: !Ref FBPPicksTableName
+          FBPLogsTableName: !Ref FBPLogsTableName
+          FBPWeeklyResultsTableName: !Ref FBPWeeklyResultsTableName
+      Layers: 
+        - !Ref FBPLibLayer
+      Events:
+        GetWeeklyResultsGET:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MyHttpApi
+            Path: /getWeeklyResults
+            Method: GET
+            PayloadFormatVersion: "2.0"
+        GetWeeklyResultsOptions:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MyHttpApi
+            Path: /getWeeklyResults
+            Method: OPTIONS
+            PayloadFormatVersion: "2.0"
+
   SaveFBPPicksPython:
     Type: AWS::Serverless::Function
     Properties:
@@ -417,6 +502,22 @@ Outputs:
       Value: !Ref MyHttpApi
       Export:
         Name: !Sub ${AWS::StackName}-HttpApiId
+    GetWeeklyResultsPythonFunction:
+      Description: GetWeeklyResultsPython Lambda Function ARN
+      Value: !GetAtt GetWeeklyResultsPython.Arn
+    GetWeeklyResultsPythonApi:
+      Description: GetWeeklyResultsPython API Endpoint
+      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod/getWeeklyResults
+      Export:
+        Name: !Sub ${AWS::StackName}-GetWeeklyResultsApi
+    CalcWeeklyResultsPythonFunction:
+      Description: CalcWeeklyResultsPython Lambda Function ARN
+      Value: !GetAtt CalcWeeklyResultsPython.Arn
+    CalcWeeklyResultsPythonApi:
+      Description: CalcWeeklyResultsPython API Endpoint
+      Value: !Sub https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod/calcWeeklyResults
+      Export:
+        Name: !Sub ${AWS::StackName}-CalcWeeklyResultsApi
     SaveFBPPicksPythonFunction:
       Description: SaveFBPPicksPython Lambda Function ARN
       Value: !GetAtt SaveFBPPicksPython.Arn

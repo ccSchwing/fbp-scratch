@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Minimal SAM template for deploy troubleshooting
+Resources:
+  MinimalFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: python3.11
+      InlineCode: |
+        def handler(event, context):
+            return {'statusCode': 200, 'body': 'Hello from minimal Lambda!'}
+      Timeout: 3
+      MemorySize: 128
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /minimal
+            Method: get
